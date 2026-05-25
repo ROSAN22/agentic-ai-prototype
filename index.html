@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapidpro AI — Migration Assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Aurora -->
+<div class="aurora">
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="orb o3"></div><div class="orb o4"></div>
+</div>
+
+<!-- ══ AGENT FLOW MODAL ════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+
+    <!-- Modal header -->
+    <div class="modal-hdr">
+      <div class="modal-title">
+        <div class="modal-title-gem">🕸️</div>
+        Agent Orchestration Flow
+        <span style="font-size:.7rem;color:var(--muted);font-weight:400">— Graphical Multi-Agent Execution</span>
+      </div>
+      <div class="modal-hdr-right">
+        <button class="modal-run-btn" id="modal-run-btn" onclick="startAgentFlow()">
+          ▶ Start Flow
+        </button>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+
+    <!-- Agent status pills -->
+    <div class="modal-agents-row" id="agent-pills">
+      <div class="agent-pill" id="pill-orchestrator"><div class="agent-pill-dot"></div>🧠 Orchestrator</div>
+      <div class="agent-pill" id="pill-discovery"><div class="agent-pill-dot"></div>🔍 Discovery</div>
+      <div class="agent-pill" id="pill-mapper"><div class="agent-pill-dot"></div>🗺️ Mapper</div>
+      <div class="agent-pill" id="pill-tuning"><div class="agent-pill-dot"></div>⚡ Tuner</div>
+      <div class="agent-pill" id="pill-provisioner"><div class="agent-pill-dot"></div>🚀 Provisioner</div>
+      <div class="agent-pill" id="pill-watchdog"><div class="agent-pill-dot"></div>🛡️ Watchdog</div>
+      <div class="agent-pill" id="pill-reporter"><div class="agent-pill-dot"></div>✉️ Reporter</div>
+    </div>
+
+    <!-- Modal body: graph + log -->
+    <div class="modal-body">
+
+      <!-- SVG Graph -->
+      <div class="flow-graph">
+        <svg class="graph-svg" viewBox="0 0 520 360" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <pattern id="g" width="22" height="22" patternUnits="userSpaceOnUse">
+              <circle cx="11" cy="11" r=".7" fill="rgba(255,255,255,.05)"/>
+            </pattern>
+          </defs>
+          <rect width="520" height="360" fill="url(#g)"/>
+
+          <!-- Edges from center orchestrator (260,175) -->
+          <line id="ge-discovery"   class="ge" x1="260" y1="175" x2="130" y2="75"/>
+          <line id="ge-mapper"      class="ge" x1="260" y1="175" x2="260" y2="60"/>
+          <line id="ge-tuning"      class="ge" x1="260" y1="175" x2="390" y2="75"/>
+          <line id="ge-provisioner" class="ge" x1="260" y1="175" x2="420" y2="190"/>
+          <line id="ge-watchdog"    class="ge" x1="260" y1="175" x2="355" y2="295"/>
+          <line id="ge-reporter"    class="ge" x1="260" y1="175" x2="165" y2="295"/>
+          <line id="ge-db"          class="ge" x1="260" y1="175" x2="100"  y2="190"/>
+
+          <!-- Discovery (130,75) -->
+          <g id="gn-discovery" class="gn" style="--nc:#14b8a6" transform="translate(130,75)">
+            <circle r="32" fill="#0a0c20" stroke="rgba(20,184,166,.3)" stroke-width="1.5"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🔍</text>
+            <text text-anchor="middle" y="21" font-size="9" fill="rgba(20,184,166,.85)" font-family="'Google Sans'">Discovery</text>
+          </g>
+
+          <!-- Mapper (260,60) -->
+          <g id="gn-mapper" class="gn" style="--nc:#8b5cf6" transform="translate(260,60)">
+            <circle r="32" fill="#0a0c20" stroke="rgba(139,92,246,.3)" stroke-width="1.5"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🗺️</text>
+            <text text-anchor="middle" y="21" font-size="9" fill="rgba(139,92,246,.85)" font-family="'Google Sans'">Mapper</text>
+          </g>
+
+          <!-- Tuner (390,75) -->
+          <g id="gn-tuning" class="gn" style="--nc:#f59e0b" transform="translate(390,75)">
+            <circle r="32" fill="#0a0c20" stroke="rgba(245,158,11,.3)" stroke-width="1.5"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">⚡</text>
+            <text text-anchor="middle" y="21" font-size="9" fill="rgba(245,158,11,.85)" font-family="'Google Sans'">Tuner</text>
+          </g>
+
+          <!-- Provisioner (420,190) -->
+          <g id="gn-provisioner" class="gn" style="--nc:#3b82f6" transform="translate(420,190)">
+            <circle r="32" fill="#0a0c20" stroke="rgba(59,130,246,.3)" stroke-width="1.5"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🚀</text>
+            <text text-anchor="middle" y="21" font-size="9" fill="rgba(59,130,246,.85)" font-family="'Google Sans'">Provisioner</text>
+          </g>
+
+          <!-- Watchdog (355,295) -->
+          <g id="gn-watchdog" class="gn" style="--nc:#ef4444" transform="translate(355,295)">
+            <circle r="32" fill="#0a0c20" stroke="rgba(239,68,68,.3)" stroke-width="1.5"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🛡️</text>
+            <text text-anchor="middle" y="21" font-size="9" fill="rgba(239,68,68,.85)" font-family="'Google Sans'">Watchdog</text>
+          </g>
+
+          <!-- Reporter (165,295) -->
+          <g id="gn-reporter" class="gn" style="--nc:#10b981" transform="translate(165,295)">
+            <circle r="32" fill="#0a0c20" stroke="rgba(16,185,129,.3)" stroke-width="1.5"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">✉️</text>
+            <text text-anchor="middle" y="21" font-size="9" fill="rgba(16,185,129,.85)" font-family="'Google Sans'">Reporter</text>
+          </g>
+
+          <!-- DB (100,190) -->
+          <g id="gn-db" class="gn" style="--nc:#8ab4f8" transform="translate(100,190)">
+            <circle r="32" fill="#0a0c20" stroke="rgba(138,180,248,.3)" stroke-width="1.5"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🗄️</text>
+            <text text-anchor="middle" y="21" font-size="9" fill="rgba(138,180,248,.85)" font-family="'Google Sans'">DB Agent</text>
+          </g>
+
+          <!-- ORCHESTRATOR CENTER (260,175) -->
+          <g id="gn-orchestrator" class="gn" style="--nc:#a78bfa" transform="translate(260,175)">
+            <circle r="44" fill="#0a0c20" stroke="rgba(167,139,250,.55)" stroke-width="2"/>
+            <text text-anchor="middle" dominant-baseline="middle" y="3" font-size="26">🧠</text>
+            <text text-anchor="middle" y="30" font-size="9.5" fill="rgba(167,139,250,.9)" font-family="'Google Sans'" font-weight="700">ORCHESTRATOR</text>
+          </g>
+        </svg>
+
+        <!-- Progress at bottom of graph -->
+        <div class="flow-progress-wrap">
+          <div class="flow-prog-label">
+            <span id="flow-prog-label">Ready — press Start Flow</span>
+            <span id="flow-prog-pct" style="color:var(--teal);font-family:var(--mono)">0%</span>
+          </div>
+          <div class="flow-pb-bg">
+            <div class="flow-pb-fill" id="flow-pb"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log Panel -->
+      <div class="flow-log">
+        <div class="flow-log-hdr">
+          <span>⬡ Live Agent Log</span>
+          <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+        </div>
+        <div class="flow-log-body" id="flow-log">
+          <div class="le le-system">
+            <div class="le-top"><span class="le-agent" style="color:var(--muted)">SYSTEM</span><span class="le-type">info</span></div>
+            <div class="le-msg">Agent flow is ready. Press <strong>▶ Start Flow</strong> to begin the orchestration simulation.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+  </div><!-- /modal -->
+</div><!-- /modal-overlay -->
+
+<!-- ══ MAIN SHELL ═══════════════════════════════════════════════ -->
+<div class="shell">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-gem">⚡</div>
+      <div>
+        <div class="brand-name">Rapidpro AI Assistant</div>
+        <div class="brand-sub">DB-Connected Migration Intelligence</div>
+      </div>
+    </div>
+    <div class="hd-right">
+      <div class="badge b-green"><div class="dot"></div>migration_db Connected</div>
+      <div class="badge b-teal">⬡ MCP Active</div>
+      <div class="badge b-purple">7 Agents Ready</div>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <div class="workspace">
+
+    <!-- ── SIDEBAR ──────────────────────────────────────────── -->
+    <aside class="sidebar">
+
+      <!-- ▶ Run Agent Flow — main CTA -->
+      <button class="run-btn" onclick="openModal()">
+        <span class="run-btn-icon">▶</span> Run Agent Flow
+      </button>
+
+      <hr class="sb-div">
+
+      <!-- DB Connections -->
+      <div class="sb-label">🗄️ DB Connections</div>
+      <div class="db-conn-list">
+        <div class="db-conn">
+          <span class="db-conn-icon">🐘</span>
+          <div class="db-conn-info">
+            <div class="db-conn-name">migration_db</div>
+            <div class="db-conn-host">localhost:5432 · PostgreSQL</div>
+          </div>
+          <div class="conn-dot ok"></div>
+        </div>
+        <div class="db-conn">
+          <span class="db-conn-icon">🏢</span>
+          <div class="db-conn-info">
+            <div class="db-conn-name">IBM CM Source</div>
+            <div class="db-conn-host">cm-prod:1476 · DB2</div>
+          </div>
+          <div class="conn-dot ok"></div>
+        </div>
+        <div class="db-conn">
+          <span class="db-conn-icon">☁️</span>
+          <div class="db-conn-info">
+            <div class="db-conn-name">S3 Target</div>
+            <div class="db-conn-host">us-east-1 · AWS</div>
+          </div>
+          <div class="conn-dot ok"></div>
+        </div>
+      </div>
+
+      <hr class="sb-div">
+
+      <!-- MCP Servers -->
+      <div class="sb-label">⬡ MCP Servers</div>
+      <div class="mcp-list">
+        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">repo-mcp</span><span class="mcp-entry-port">:3001</span></div>
+        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">job-mcp</span><span class="mcp-entry-port">:3002</span></div>
+        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">db-mcp</span><span class="mcp-entry-port">:3003</span></div>
+        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">monitor-mcp</span><span class="mcp-entry-port">:3004</span></div>
+        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">migration-mcp</span><span class="mcp-entry-port">:3005</span></div>
+        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">reporter-mcp</span><span class="mcp-entry-port">:3006</span></div>
+      </div>
+
+      <hr class="sb-div">
+      <div class="sb-note">Queries fetch live data from migration_db. The agent flow modal shows the full orchestration pipeline.</div>
+
+    </aside>
+
+    <!-- ── CHAT AREA ─────────────────────────────────────────── -->
+    <div class="chat-area">
+      <div class="chat-window" id="cw">
+
+        <!-- Welcome state -->
+        <div class="welcome" id="welcome">
+          <div class="w-gem">🧠</div>
+          <div class="w-title">Ask me anything</div>
+          <div class="w-sub">
+            I query your <strong>migration_db</strong> in real time to answer questions about jobs, throughput, failures, and more.
+            Use <strong>▶ Run Agent Flow</strong> in the sidebar to watch the full agent orchestration.
+          </div>
+          <div class="chips">
+            <div class="chip" onclick="useChip(this)">What is the current throughput?</div>
+            <div class="chip" onclick="useChip(this)">How many jobs failed today?</div>
+            <div class="chip" onclick="useChip(this)">Create 10 new migration jobs</div>
+            <div class="chip" onclick="useChip(this)">Create a new repository named IBM_CM_PROD_2</div>
+            <div class="chip" onclick="useChip(this)">Expected time to complete remaining documents?</div>
+            <div class="chip" onclick="useChip(this)">Show DB status of migration_items table</div>
+          </div>
+        </div>
+
+      </div><!-- /chat-window -->
+
+      <!-- Input -->
+      <div class="input-wrap">
+        <div id="fprow" style="max-width:760px;margin:0 auto .35rem;display:none">
+          <span class="file-pill" id="fpill">📎 <span id="fpname"></span></span>
+        </div>
+        <div class="input-bar">
+          <textarea class="pinput" id="pinput" rows="1"
+            placeholder="Ask about throughput, jobs, failures, DB status, ETAs…"
+            onkeydown="hkey(event)" oninput="resize(this)"></textarea>
+          <div class="iact">
+            <label class="up-btn" title="Upload schema file">📎
+              <input type="file" id="fup" accept=".csv,.json,.xlsx" onchange="hfile(event)">
+            </label>
+            <button class="send-btn" id="sbtn" onclick="doSend()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="input-hint">Rapidpro AI · Queries migration_db in real time · Use ▶ Run Agent Flow in sidebar for orchestration</div>
+      </div>
+    </div>
+
+  </div><!-- /workspace -->
+</div><!-- /shell -->
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+// ── State ─────────────────────────────────────────────────────
+let busy = false;
+let flowRunning = false;
+
+// ── Utilities ─────────────────────────────────────────────────
+const D = ms => new Promise(r => setTimeout(r, ms));
+const ts = () => new Date().toLocaleTimeString('en-GB');
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const cw = () => document.getElementById('cw');
+function resize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,130)+'px'; }
+function scrollDown(){ cw().scrollTop = cw().scrollHeight; }
+function scrollLog(){ const l=document.getElementById('flow-log'); l.scrollTop=l.scrollHeight; }
+function useChip(el){ document.getElementById('pinput').value=el.textContent.trim(); resize(document.getElementById('pinput')); document.getElementById('pinput').focus(); }
+function hkey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); doSend(); } }
+function hfile(e){ const f=e.target.files[0]; if(!f) return; document.getElementById('fpname').textContent=f.name; document.getElementById('fprow').style.display='block'; }
+function hideWelcome(){ const w=document.getElementById('welcome'); if(w) w.remove(); }
+
+// ── Modal Open / Close ─────────────────────────────────────────
+function openModal(){
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+}
+// Close on backdrop click
+document.getElementById('modal').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+
+// ── Chat message helpers ──────────────────────────────────────
+function addUser(text){
+  hideWelcome();
+  const el=document.createElement('div');
+  el.className='msg-row user';
+  el.innerHTML=`<div class="msg-bubble">${esc(text)}</div>`;
+  cw().appendChild(el); scrollDown();
+}
+function showTyping(){
+  const el=document.createElement('div'); el.className='msg-row agent'; el.id='typing';
+  el.innerHTML=`<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="dots"><span></span><span></span><span></span></div></div>`;
+  cw().appendChild(el); scrollDown();
+}
+function removeTyping(){ const t=document.getElementById('typing'); if(t) t.remove(); }
+function addAgent(avatar, html){
+  removeTyping();
+  const el=document.createElement('div'); el.className='msg-row agent';
+  el.innerHTML=`<div class="msg-avatar">${avatar}</div><div class="msg-bubble" style="max-width:82%">${html}</div>`;
+  cw().appendChild(el); scrollDown(); return el;
+}
+
+// ── DB Query Card builder ─────────────────────────────────────
+function dbCard({ db, sql, rowsTag, resultHTML }){
+  return `
+  <div class="db-card">
+    <div class="db-card-hdr">
+      <span class="db-icon">🗄️</span>
+      <span class="db-name">${esc(db)}</span>
+      <span class="db-pill conn">● Connected</span>
+      <span class="db-latency">⏱ ${8+Math.floor(Math.random()*18)}ms</span>
+      <span class="db-pill ok" style="margin-left:.3rem">✔ ${rowsTag}</span>
+    </div>
+    <div class="db-query-block">${sql}</div>
+    <div class="db-result-block">${resultHTML}</div>
+  </div>`;
+}
+
+// ── Mock DB Responses ─────────────────────────────────────────
+
+async function resp_throughput(){
+  await D(300);
+  const sql = `<span class="kw">SELECT</span> current_throughput, peak_throughput, avg_throughput,
+  threads, batch_size, active_vms
+<span class="kw">FROM</span> <span class="tbl">job_metrics</span>
+<span class="kw">WHERE</span> snapshot_time = <span class="val">DATE_TRUNC('hour', NOW())</span>
+<span class="kw">ORDER BY</span> snapshot_time <span class="kw">DESC LIMIT</span> <span class="val">1</span>;`;
+
+  const result = `<div class="rt">
+    <div class="rr"><span class="rl">current_throughput</span><span class="rv ok">4,150 docs/sec</span></div>
+    <div class="rr"><span class="rl">peak_throughput</span><span class="rv">5,820 docs/sec</span></div>
+    <div class="rr"><span class="rl">avg_throughput (7d)</span><span class="rv">3,940 docs/sec</span></div>
+    <div class="rr"><span class="rl">batch_size</span><span class="rv">75,000 (auto-tuned)</span></div>
+    <div class="rr"><span class="rl">threads</span><span class="rv">8</span></div>
+    <div class="rr"><span class="rl">active_vms</span><span class="rv ok">4</span></div>
+  </div>`;
+  return `<p>Fetched from <strong>job_metrics</strong> table in <strong>migration_db</strong>:</p>
+  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'1 row', resultHTML:result })}
+  <p style="margin-top:.5rem;color:var(--muted);font-size:.82rem">Current throughput is running <strong style="color:var(--teal)">+8% above yesterday's average</strong>. All 4 VMs are at peak efficiency.</p>`;
+}
+
+async function resp_failed(){
+  await D(300);
+  const sql = `<span class="kw">SELECT</span> job_id, status, error_type, failed_at, vm_node
+<span class="kw">FROM</span> <span class="tbl">migration_jobs</span>
+<span class="kw">WHERE</span> status = <span class="val">'FAILED'</span>
+  <span class="kw">AND</span> DATE(failed_at) = <span class="val">CURRENT_DATE</span>
+<span class="kw">ORDER BY</span> failed_at <span class="kw">DESC</span>;`;
+
+  const rows = [
+    ['JOB-034','FAILED','Timeout','10:14:22','VM-2'],
+    ['JOB-027','FAILED','Deadlock','08:52:10','VM-3'],
+    ['JOB-041','FAILED','OOM','07:30:45','VM-1'],
+    ['JOB-018','FAILED','NullRef','06:11:03','VM-4'],
+  ];
+  const table = `<table style="width:100%;font-size:.72rem;border-collapse:collapse;font-family:var(--mono)">
+    <tr style="color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06)">
+      <td style="padding:.22rem .3rem">job_id</td><td>error_type</td><td>failed_at</td><td>vm_node</td>
+    </tr>
+    ${rows.map(([id,s,e,t,v])=>`<tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+      <td style="padding:.22rem .3rem;color:var(--pink)">${id}</td>
+      <td style="color:var(--yellow)">${e}</td>
+      <td style="color:var(--muted)">${t}</td>
+      <td style="color:var(--blue)">${v}</td>
+    </tr>`).join('')}
+  </table>
+  <button class="act-btn" onclick="alert('retry_failed_jobs() → job-mcp:3002 dispatched!')">⟳ Retry All Failed Jobs</button>`;
+
+  return `<p>Queried <strong>migration_jobs</strong> for today's failures:</p>
+  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'4 rows', resultHTML:table })}`;
+}
+
+async function resp_createJobs(count){
+  await D(400);
+  const sql = `<span class="kw">INSERT INTO</span> <span class="tbl">migration_jobs</span>
+  (job_name, batch_size, thread_count, status, created_at)
+<span class="kw">SELECT</span>
+  <span class="val">'BATCH_JOB_' || generate_series(43, ${42+count})</span>,
+  <span class="val">75000</span>, <span class="val">8</span>, <span class="val">'QUEUED'</span>, <span class="val">NOW()</span>
+<span class="kw">RETURNING</span> job_id, status;`;
+
+  const ids = Array.from({length:count},(_,i)=>`JOB-${String(43+i).padStart(3,'0')}`);
+  const result = `<div class="rt" style="margin-bottom:.4rem">
+    <div class="rr"><span class="rl">rows inserted</span><span class="rv ok">${count}</span></div>
+    <div class="rr"><span class="rl">batch_size</span><span class="rv">75,000</span></div>
+    <div class="rr"><span class="rl">thread_count</span><span class="rv">8</span></div>
+    <div class="rr"><span class="rl">status</span><span class="rv ok">QUEUED</span></div>
+  </div>
+  <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Created Job IDs:</div>
+  <div class="jgrid">${ids.map(id=>`<div class="jchip">${id}</div>`).join('')}</div>`;
+
+  return `<p><strong>${count} jobs</strong> inserted into <strong>migration_jobs</strong>:</p>
+  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:`${count} rows inserted`, resultHTML:result })}`;
+}
+
+async function resp_createRepo(name){
+  await D(400);
+  const sql = `<span class="kw">INSERT INTO</span> <span class="tbl">repositories</span>
+  (repo_name, repo_type, region, connection_status, created_at)
+<span class="kw">VALUES</span> (
+  <span class="val">'${esc(name)}'</span>, <span class="val">'IBM_CM'</span>,
+  <span class="val">'us-east-1'</span>, <span class="val">'CONNECTED'</span>, <span class="val">NOW()</span>
+)
+<span class="kw">RETURNING</span> repo_id, repo_name, connection_status;`;
+
+  const result = `<div class="rt">
+    <div class="rr"><span class="rl">repo_id</span><span class="rv ok">REPO-003</span></div>
+    <div class="rr"><span class="rl">repo_name</span><span class="rv">${esc(name)}</span></div>
+    <div class="rr"><span class="rl">repo_type</span><span class="rv">IBM Content Manager</span></div>
+    <div class="rr"><span class="rl">region</span><span class="rv">us-east-1</span></div>
+    <div class="rr"><span class="rl">connection_status</span><span class="rv ok">CONNECTED ✔</span></div>
+    <div class="rr"><span class="rl">latency</span><span class="rv ok">9ms</span></div>
+  </div>`;
+
+  return `<p>Repository <strong>${esc(name)}</strong> created in <strong>repositories</strong> table:</p>
+  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'1 row inserted', resultHTML:result })}`;
+}
+
+async function resp_eta(){
+  await D(300);
+  const sql = `<span class="kw">SELECT</span>
+  total_docs, completed_docs,
+  (total_docs - completed_docs) AS remaining_docs,
+  ROUND((completed_docs::NUMERIC / total_docs) * 100, 1) AS pct_done,
+  current_throughput,
+  ROUND((total_docs - completed_docs) / current_throughput / 60.0, 1) AS eta_minutes
+<span class="kw">FROM</span> <span class="tbl">migration_summary</span>
+<span class="kw">WHERE</span> run_date = <span class="val">CURRENT_DATE</span>;`;
+
+  const pct = 60.7;
+  const result = `<div class="rt" style="margin-bottom:.5rem">
+    <div class="rr"><span class="rl">total_docs</span><span class="rv">350,000</span></div>
+    <div class="rr"><span class="rl">completed_docs</span><span class="rv ok">212,450</span></div>
+    <div class="rr"><span class="rl">remaining_docs</span><span class="rv mid">137,550</span></div>
+    <div class="rr"><span class="rl">pct_done</span><span class="rv ok">${pct}%</span></div>
+    <div class="rr"><span class="rl">current_throughput</span><span class="rv ok">4,150 docs/sec</span></div>
+    <div class="rr"><span class="rl">eta_minutes</span><span class="rv ok">~33.7 min</span></div>
+  </div>
+  <div style="font-size:.7rem;color:var(--muted);margin-bottom:.3rem">Progress — ${pct}%</div>
+  <div class="pb-bg"><div class="pb-fill" style="width:${pct}%"></div></div>`;
+
+  return `<p>ETA calculated directly from <strong>migration_summary</strong>:</p>
+  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'1 row', resultHTML:result })}
+  <p style="margin-top:.5rem;color:var(--muted);font-size:.82rem">At current throughput of <strong style="color:var(--teal)">4,150 docs/sec</strong>, remaining <strong>137,550 documents</strong> will complete in approximately <strong style="color:var(--teal)">~34 minutes</strong>.</p>`;
+}
+
+async function resp_dbStatus(){
+  await D(350);
+  const sql = `<span class="kw">SELECT</span>
+  relname AS table_name,
+  n_live_tup AS total_rows,
+  pg_size_pretty(pg_total_relation_size(relid)) AS table_size,
+  idx_scan AS index_scans,
+  n_dead_tup AS dead_rows
+<span class="kw">FROM</span> <span class="tbl">pg_stat_user_tables</span>
+<span class="kw">WHERE</span> relname = <span class="val">'migration_items'</span>;
+
+<span class="cmt">-- Row lock status</span>
+<span class="kw">SELECT</span> COUNT(*) AS locked_rows <span class="kw">FROM</span> <span class="tbl">pg_locks</span>
+<span class="kw">WHERE</span> relation = <span class="val">'migration_items'</span>::regclass;`;
+
+  const result = `<div class="rt">
+    <div class="rr"><span class="rl">table_name</span><span class="rv">migration_items</span></div>
+    <div class="rr"><span class="rl">total_rows</span><span class="rv">350,000</span></div>
+    <div class="rr"><span class="rl">table_size</span><span class="rv">28.4 GB</span></div>
+    <div class="rr"><span class="rl">index_scans</span><span class="rv ok">2,841,300</span></div>
+    <div class="rr"><span class="rl">dead_rows</span><span class="rv ok">0 (vacuum healthy)</span></div>
+    <div class="rr"><span class="rl">locked_rows</span><span class="rv ok">0 (no active locks)</span></div>
+    <div class="rr"><span class="rl">query_latency</span><span class="rv ok">12ms</span></div>
+  </div>`;
+
+  return `<p>DB health check on <strong>migration_items</strong>:</p>
+  ${dbCard({ db:'migration_db @ localhost:5432 (PostgreSQL 15.2)', sql, rowsTag:'1 row', resultHTML:result })}
+  <p style="margin-top:.5rem;color:var(--muted);font-size:.82rem">Table is healthy — no row locks, no dead tuples, and vacuum is current.</p>`;
+}
+
+// ── Intent router ─────────────────────────────────────────────
+async function route(text){
+  const t = text.toLowerCase();
+  if(t.includes('throughput')||t.includes('speed')||t.includes('performance'))
+    return { avatar:'📊', html: await resp_throughput() };
+  if(t.includes('fail')||t.includes('error')||(t.includes('how many')&&t.includes('job')))
+    return { avatar:'⚙️', html: await resp_failed() };
+  if((t.includes('create')||t.includes('make'))&&(t.includes('job')))
+    return { avatar:'⚙️', html: await resp_createJobs(parseInt(text.match(/\d+/)?.[0])||5) };
+  if((t.includes('create')||t.includes('new'))&&t.includes('repo'))
+    return { avatar:'🗂️', html: await resp_createRepo(text.match(/["']([^"']+)["']/)?.[1]||'IBM_CM_PROD_2') };
+  if(t.includes('time')||t.includes('eta')||t.includes('remain')||t.includes('complet')||t.includes('expect'))
+    return { avatar:'⏱️', html: await resp_eta() };
+  if(t.includes('db')||t.includes('database')||t.includes('table')||t.includes('sql')||t.includes('status'))
+    return { avatar:'🗄️', html: await resp_dbStatus() };
+  // Default
+  return { avatar:'🧠', html:`<p>I can answer questions by querying <strong>migration_db</strong> directly. Try:</p>
+    <div style="margin-top:.5rem;display:flex;flex-direction:column;gap:.25rem;font-size:.82rem">
+      <div>• <span style="color:var(--blue)">throughput / speed</span> — live performance metrics</div>
+      <div>• <span style="color:var(--yellow)">failed jobs / errors</span> — today's failure report</div>
+      <div>• <span style="color:var(--teal)">create 10 jobs</span> — insert into migration_jobs table</div>
+      <div>• <span style="color:var(--purple)">create new repository</span> — register in repositories table</div>
+      <div>• <span style="color:var(--pink)">expected time / ETA</span> — completion estimate</div>
+      <div>• <span style="color:var(--green)">DB status / table</span> — pg_stat health check</div>
+    </div>
+    <p style="margin-top:.6rem;color:var(--muted);font-size:.8rem">Use <strong>▶ Run Agent Flow</strong> in the sidebar to launch the full visual orchestration pipeline.</p>` };
+}
+
+// ── Main send ─────────────────────────────────────────────────
+async function doSend(){
+  if(busy) return;
+  const inp = document.getElementById('pinput');
+  const text = inp.value.trim(); if(!text) return;
+  busy = true;
+  document.getElementById('sbtn').disabled = true;
+  inp.value = ''; resize(inp);
+  document.getElementById('fprow').style.display = 'none';
+  addUser(text);
+  showTyping();
+  await D(600);
+  const r = await route(text);
+  addAgent(r.avatar, r.html);
+  busy = false;
+  document.getElementById('sbtn').disabled = false;
+}
+
+// ══════════════════════════════════════════════════════════════
+// AGENT FLOW MODAL ENGINE
+// ══════════════════════════════════════════════════════════════
+
+const AGENTS = [
+  {id:'orchestrator', name:'Orchestrator', icon:'🧠', color:'rgba(167,139,250,.7)'},
+  {id:'discovery',    name:'Discovery',    icon:'🔍', color:'rgba(20,184,166,.7)'},
+  {id:'mapper',       name:'Mapper',       icon:'🗺️', color:'rgba(139,92,246,.7)'},
+  {id:'tuning',       name:'Tuner',        icon:'⚡', color:'rgba(245,158,11,.7)'},
+  {id:'provisioner',  name:'Provisioner',  icon:'🚀', color:'rgba(59,130,246,.7)'},
+  {id:'watchdog',     name:'Watchdog',     icon:'🛡️', color:'rgba(239,68,68,.7)'},
+  {id:'reporter',     name:'Reporter',     icon:'✉️', color:'rgba(16,185,129,.7)'},
+  {id:'db',           name:'DB Agent',     icon:'🗄️', color:'rgba(138,180,248,.7)'},
+];
+
+function setPill(id, state){
+  const el = document.getElementById(`pill-${id}`);
+  if(!el) return;
+  el.className = `agent-pill ${state}`;
+}
+
+function activateNode(id, ms=4000){
+  const n = document.getElementById(`gn-${id}`);
+  const e = document.getElementById(`ge-${id}`);
+  const ag = AGENTS.find(a=>a.id===id);
+  if(n) n.classList.add('active');
+  if(e){ e.classList.add('active'); e.style.stroke = ag?.color||'rgba(167,139,250,.7)'; }
+  setTimeout(()=>{
+    if(n) n.classList.remove('active');
+    if(e){ e.classList.remove('active'); e.style.stroke=''; }
+  }, ms);
+}
+
+function addLog(agentId, type, message){
+  const ag = AGENTS.find(a=>a.id===agentId)||{name:'System',icon:'⬡',color:'var(--muted)'};
+  const typeLabels = { thought:'💭 Thought', action:'⚡ Action', obs:'👁 Observation', alert:'🚨 Alert', system:'ℹ System', success:'✔ Success' };
+  const el = document.createElement('div');
+  el.className = `le le-${type}`;
+  el.innerHTML = `
+    <div class="le-top">
+      <span class="le-agent" style="color:${ag.color||'var(--muted)'}">${ag.icon} ${ag.name}</span>
+      <span class="le-type">${typeLabels[type]||type}</span>
+      <span class="le-ts">${ts()}</span>
+    </div>
+    <div class="le-msg">${esc(message)}</div>`;
+  document.getElementById('flow-log').appendChild(el);
+  scrollLog();
+}
+
+function setFlowProgress(pct, label){
+  document.getElementById('flow-pb').style.width = pct+'%';
+  document.getElementById('flow-prog-pct').textContent = pct+'%';
+  document.getElementById('flow-prog-label').textContent = label;
+}
+
+function resetFlowUI(){
+  document.getElementById('flow-log').innerHTML='<div class="le le-system"><div class="le-top"><span class="le-agent" style="color:var(--muted)">⬡ SYSTEM</span><span class="le-type">info</span></div><div class="le-msg">Flow reset. Press ▶ Start Flow to begin.</div></div>';
+  AGENTS.forEach(a=>{ setPill(a.id,''); });
+  document.querySelectorAll('.ge').forEach(e=>{ e.classList.remove('active'); e.style.stroke=''; });
+  document.querySelectorAll('.gn').forEach(n=>{ n.classList.remove('active'); });
+  setFlowProgress(0,'Ready — press Start Flow');
+}
+
+async function startAgentFlow(){
+  if(flowRunning) return;
+  flowRunning = true;
+  const btn = document.getElementById('modal-run-btn');
+  btn.disabled = true; btn.textContent = '⟳ Running…';
+
+  // Clear log
+  document.getElementById('flow-log').innerHTML='';
+
+  // Phase 0 - Orchestrator
+  setPill('orchestrator','planning');
+  activateNode('orchestrator',20000);
+  setFlowProgress(5,'Phase 1/6 — Orchestrator Planning');
+  addLog('orchestrator','system','Rapidpro Agent Flow started. Decomposing migration goal into 6 pipeline stages.');
+  await D(800);
+  addLog('orchestrator','thought','Scanning prompt. Source: IBM CM · Target: AWS S3 · Items: 350,000. Building DAG execution plan.');
+  await D(1000);
+  setPill('orchestrator','executing');
+  addLog('orchestrator','action','Dispatching to specialized agents via MCP gateway. Sequence: Discovery → Mapper → Tuner → Provisioner → Watchdog → Reporter.');
+  await D(800);
+
+  // Phase 1 - Discovery + DB
+  setFlowProgress(18,'Phase 2/6 — Schema Discovery');
+  setPill('discovery','planning'); setPill('db','planning');
+  activateNode('discovery',5000); activateNode('db',4000);
+  await D(700);
+  setPill('discovery','executing'); setPill('db','executing');
+  addLog('discovery','thought','Connecting to IBM CM source repository via discoverserver microservice.');
+  await D(800);
+  addLog('db','action','SQL: SELECT * FROM cm_document_classes WHERE active=true; → 6 classes returned.');
+  await D(700);
+  addLog('discovery','obs','Fetched 6 document classes, 350,000 total items. Connection latency: 14ms. Schema validated.');
+  setPill('discovery','completed'); setPill('db','completed');
+  await D(600);
+
+  // Phase 2 - Mapper
+  setFlowProgress(34,'Phase 3/6 — Attribute Mapping');
+  setPill('mapper','planning'); activateNode('mapper',5000);
+  await D(600);
+  setPill('mapper','executing');
+  addLog('mapper','thought','Comparing IBM CM source fields against AWS S3 target schema. Using LLM semantic alignment.');
+  await D(900);
+  addLog('mapper','action','Mapping: item_id→s3_object_key, creator_name→author, creation_date→migrated_at, document_class→doc_category, content_blob→storage_uri, retention_code→retention_period_yrs');
+  await D(700);
+  addLog('mapper','obs','100% coverage achieved. 6/6 fields mapped. Config written to config-service via repo-mcp:3001.');
+  setPill('mapper','completed');
+
+  // Phase 3 - Tuner
+  setFlowProgress(50,'Phase 4/6 — Performance Tuning');
+  setPill('tuning','planning'); activateNode('tuning',5000);
+  await D(600);
+  setPill('tuning','executing');
+  addLog('tuning','thought','Querying migration_db for historical throughput benchmarks and target API limits.');
+  await D(800);
+  addLog('db','action','SQL: SELECT AVG(throughput), MAX(throughput) FROM job_metrics WHERE week=CURRENT_WEEK; → avg=3940, max=5820');
+  await D(700);
+  addLog('tuning','action','Auto-scaling: BatchSize 50,000 → 75,000. ThreadCount 4 → 8. Expected gain: +42% throughput.');
+  await D(600);
+  addLog('tuning','obs','Tuned parameters written to migrationsetservice config. Validated against S3 write limits (10k req/s). ✔');
+  setPill('tuning','completed');
+
+  // Phase 4 - Provisioner
+  setFlowProgress(65,'Phase 5/6 — VM Provisioning & Execution');
+  setPill('provisioner','planning'); activateNode('provisioner',6000);
+  await D(600);
+  setPill('provisioner','executing');
+  addLog('provisioner','thought','Provisioning 4 parallel Worker VMs in AWS us-east-1 subnet.');
+  await D(800);
+  addLog('provisioner','action','Deploying Docker containers to VM-1, VM-2, VM-3, VM-4. Starting batch ingestion workers.');
+  await D(1000);
+  addLog('provisioner','obs','All 4 VMs online. Heartbeat confirmed. Batch pipeline running at 4,150 docs/sec.');
+  setPill('provisioner','completed');
+
+  // Phase 5 - Watchdog (with deadlock)
+  setFlowProgress(78,'Phase 5/6 — Watchdog Monitoring');
+  setPill('watchdog','planning'); activateNode('watchdog',10000);
+  await D(600);
+  setPill('watchdog','executing');
+  addLog('watchdog','thought','Attaching telemetry stream to all 4 VMs. Monitoring for row-level locks, OOM, and network timeouts.');
+  await D(1200);
+  addLog('watchdog','alert','CRITICAL: Row-level deadlock on VM-3 at chunk #1845. Transaction lock blocking ingestion. Throughput dropped 75%.');
+  setPill('watchdog','error');
+  await D(1000);
+  addLog('watchdog','action','Self-healing protocol: (1) Pause chunk #1845 ingestion. (2) Rollback to last checkpoint. (3) Hot-reboot VM-3 container.');
+  await D(1500);
+  addLog('watchdog','obs','VM-3 recovered in 15 seconds. Zero data loss. Ingestion resumed. All VMs active. Throughput restored.');
+  setPill('watchdog','completed');
+
+  // Phase 6 - Reporter
+  setFlowProgress(92,'Phase 6/6 — Client Report Generation');
+  setPill('reporter','planning'); activateNode('reporter',5000);
+  await D(600);
+  setPill('reporter','executing');
+  addLog('reporter','thought','Compiling final migration statistics from migration_db for daily client digest.');
+  await D(800);
+  addLog('db','action','SQL: SELECT SUM(migrated), AVG(throughput), COUNT(*) FROM job_metrics WHERE run_date=CURRENT_DATE;');
+  await D(600);
+  addLog('reporter','action','Generating HTML email report: 350,000 docs migrated, 4,150 avg docs/sec, 1 deadlock auto-healed.');
+  await D(700);
+  addLog('reporter','obs','Email draft ready for client-ops@clientorg.com. Dispatching via reporter-mcp:3006 → gateway mailer.');
+  setPill('reporter','completed');
+
+  // Done
+  setFlowProgress(100,'✔ All 6 Phases Complete — 350,000 documents migrated');
+  setPill('orchestrator','completed');
+  addLog('orchestrator','success','Migration pipeline complete. All 7 agents finished. VMs de-provisioned. Client report sent. ✔');
+
+  btn.disabled = false;
+  btn.innerHTML = '↺ Run Again';
+  btn.onclick = ()=>{ resetFlowUI(); flowRunning=false; btn.innerHTML='▶ Start Flow'; btn.onclick=startAgentFlow; };
+  flowRunning = false;
+}
+</script>
+</body>
+</html>
