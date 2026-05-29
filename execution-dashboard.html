@@ -1279,6 +1279,22 @@ input, select, button { font-family: inherit; }
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
+   GLOBAL ERROR CATCHER & HEALTH MONITOR
+   ═══════════════════════════════════════════════════════════════ */
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error("Global JS Error caught:", message, "at", source, ":", lineno);
+  let errDiv = document.getElementById('global-error-banner');
+  if (!errDiv) {
+    errDiv = document.createElement('div');
+    errDiv.id = 'global-error-banner';
+    errDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; background: #fee2e2; color: #b91c1c; border-bottom: 2px solid #f87171; padding: 12px; font-family: monospace; font-size: 12px; z-index: 99999; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1);';
+    document.body.appendChild(errDiv);
+  }
+  errDiv.innerHTML = `⚠️ JavaScript Error: ${message} (Line ${lineno}:${colno}) in ${source.split('/').pop()}`;
+  return false;
+};
+
+/* ═══════════════════════════════════════════════════════════════
    STATE & DATA
    ═══════════════════════════════════════════════════════════════ */
 let isRunning = false;
