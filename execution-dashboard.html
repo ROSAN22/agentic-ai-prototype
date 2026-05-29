@@ -1899,6 +1899,13 @@ function executePhase3() {
   addEvent('INFO', 'Performance tuning complete. Main migration ingestion engine fully active.');
   addEvent('INFO', '4 worker VMs processing parallel data packet migration cycles.');
   
+  // Initial active agent panel updates
+  updateAgentPanel(
+    'Performance calibration complete. Starting dynamic parallel batch extraction and ingestion across 4 worker nodes at tuned 150k batch limits.',
+    `${tcFn('deployMigrationJobs')}${tcPunct('(')}${tcKey('threads')}: ${tcNum('12')}, ${tcKey('batchSize')}: ${tcNum('150000')}${tcPunct(')')}`,
+    `${tcPunct('{')} ${tcKey('status')}: ${tcStr('MIGRATION_ACTIVE')}, ${tcKey('activeVMs')}: ${tcNum('4')}, ${tcKey('targetS3')}: ${tcStr('rp-migration')} ${tcPunct('}')}`
+  );
+  
   let currentPct = 0;
   
   mainSimInterval = setInterval(() => {
@@ -1913,8 +1920,18 @@ function executePhase3() {
     // Alternating Extraction & Ingestion status cycles across the 4 VMs
     if (currentPct % 10 === 0) {
       setAgentActive('extractor');
+      updateAgentPanel(
+        'Orchestrating distributed extraction jobs. Worker VMs pulling documents from IBM FileNet source partition buffers to local staging partitions.',
+        `${tcFn('extractBatchFromSource')}${tcPunct('(')}${tcKey('batchSize')}: ${tcNum('150000')}${tcPunct(')')}`,
+        `${tcPunct('{')} ${tcKey('activeExtractions')}: ${tcNum('4')}, ${tcKey('bytesRead')}: ${tcStr('45.0 GB')} ${tcPunct('}')}`
+      );
     } else if (currentPct % 10 === 5) {
       setAgentActive('ingester');
+      updateAgentPanel(
+        'Orchestrating target ingestion tasks. Worker VMs uploading completed staging partitions to Amazon S3 bucket target.',
+        `${tcFn('ingestStagingToTarget')}${tcPunct('(')}${tcKey('destinationS3')}: ${tcStr('rp-migration')}${tcPunct(')')}`,
+        `${tcPunct('{')} ${tcKey('activeUploads')}: ${tcNum('4')}, ${tcKey('bytesWritten')}: ${tcStr('52.0 GB')}, ${tcKey('s3Response')}: ${tcStr('200_OK')} ${tcPunct('}')}`
+      );
     }
 
     vms.forEach(vm => {
@@ -1952,8 +1969,17 @@ function animateClassProgress(totalPct) {
     const val = Math.min(classTotals[key], Math.floor(classTotals[key] * (totalPct / 100) * speeds[idx]));
     classProgress[key] = val;
     
-    document.getElementById(`pb-${key.toLowerCase().replace('documents','').replace('records','').replace('logs','')}`).style.width = (val / classTotals[key]) * 100 + '%';
-    document.getElementById(`pc-${key}`).textContent = val.toLocaleString() + ' / ' + classTotals[key].toLocaleString();
+    const shortName = key.toLowerCase().replace('documents','').replace('records','').replace('logs','');
+    
+    const barEl = document.getElementById(`pb-${shortName}`);
+    const txtEl = document.getElementById(`pc-${shortName}`);
+    
+    if (barEl) {
+      barEl.style.width = (val / classTotals[key]) * 100 + '%';
+    }
+    if (txtEl) {
+      txtEl.textContent = val.toLocaleString() + ' / ' + classTotals[key].toLocaleString();
+    }
   });
 }
 
@@ -2099,8 +2125,18 @@ function triggerStorageAlertEvent() {
       // Alternating Extraction & Ingestion status cycles across the 4 VMs post-healing
       if (currentPct % 10 === 0) {
         setAgentActive('extractor');
+        updateAgentPanel(
+          'Resuming parallel extraction operations. Worker VMs actively streaming data chunks from IBM FileNet DB store to VM disks.',
+          `${tcFn('extractBatchFromSource')}${tcPunct('(')}${tcKey('batchSize')}: ${tcNum('150000')}${tcPunct(')')}`,
+          `${tcPunct('{')} ${tcKey('extractionsActive')}: ${tcNum('4')}, ${tcKey('healedNode')}: ${tcStr('VM-3')} ${tcPunct('}')}`
+        );
       } else if (currentPct % 10 === 5) {
         setAgentActive('ingester');
+        updateAgentPanel(
+          'Uploading verified staged assets to AWS S3 container storage. Scaling concurrent threads up to target WAN boundaries.',
+          `${tcFn('ingestStagingToTarget')}${tcPunct('(')}${tcKey('destinationS3')}: ${tcStr('rp-migration')}${tcPunct(')')}`,
+          `${tcPunct('{')} ${tcKey('uploadsActive')}: ${tcNum('4')}, ${tcKey('throughputSec')}: ${tcNum('4380')} ${tcPunct('}')}`
+        );
       }
 
       vms.forEach(vm => {
