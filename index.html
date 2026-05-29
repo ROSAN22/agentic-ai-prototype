@@ -1,737 +1,2708 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rapidpro AI — Migration Assistant</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AutoMigrate AI — RapidPro Agent Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ─── RESET & BASE ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  background: #f0f4fb;
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+}
+:root {
+  --blue: #1a56d6;
+  --blue-dark: #1446b8;
+  --teal: #0d9488;
+  --green: #16a34a;
+  --red: #dc2626;
+  --amber: #d97706;
+  --violet: #7c3aed;
+  --bg: #f0f4fb;
+  --white: #ffffff;
+  --border: rgba(26,86,214,0.12);
+  --text: #0f172a;
+  --muted: #64748b;
+  --dim: #94a3b8;
+  --code-bg: #0f1629;
+}
+input, select, button { font-family: inherit; }
+input:focus, select:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ─── HEADER ──────────────────────────────────────────────────── */
+#header {
+  height: 50px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(26,86,214,0.06);
+}
+.logo-wrap { display: flex; align-items: center; gap: 9px; }
+.logo-gem {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a56d6 0%, #7c3aed 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 800;
+  box-shadow: 0 2px 8px rgba(26,86,214,0.35);
+  flex-shrink: 0;
+}
+.logo-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+.logo-name span { color: var(--blue); }
+
+.header-center { flex: 1; display: flex; justify-content: center; align-items: center; gap: 10px; }
+.progress-dots { display: flex; gap: 8px; align-items: center; }
+.pdot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #cbd5e1;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.pdot.done { background: var(--green); border-color: var(--green); }
+.pdot.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26,86,214,0.25);
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%,100% { box-shadow: 0 0 0 3px rgba(26,86,214,0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(26,86,214,0.10); }
+}
+.pdot-label { font-size: 10px; color: var(--muted); margin-left: 4px; font-weight: 600; }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+.session-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--muted);
+}
+.status-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-running { background: #dcfce7; color: var(--green); }
+.badge-idle { background: #f1f5f9; color: var(--muted); }
+.badge-done { background: #d1fae5; color: #065f46; }
+
+/* ─── BODY LAYOUT ─────────────────────────────────────────────── */
+#app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─── LEFT STEP NAV ───────────────────────────────────────────── */
+#step-nav {
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.nav-section-title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--dim);
+  padding: 12px 14px 6px;
+}
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-left: 3px solid transparent;
+  position: relative;
+}
+.step-item:hover { background: #f8faff; }
+.step-item.active { background: #eef3ff; border-left-color: var(--blue); }
+.step-item.done { border-left-color: var(--green); }
+.step-circle {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #cbd5e1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.3s;
+}
+.step-circle.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+.step-circle.done { background: var(--green); border-color: var(--green); color: #fff; font-size: 11px; }
+.step-info { flex: 1; min-width: 0; }
+.step-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s, font-weight 0.2s;
+}
+.step-item.active .step-name { color: var(--blue); font-weight: 700; }
+.step-item.done .step-name { color: var(--green); font-weight: 600; }
+.step-status-badge {
+  display: inline-block;
+  font-size: 8px; font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-top: 2px;
+}
+.ssb-pending { background: #f1f5f9; color: var(--dim); }
+.ssb-active {
+  background: #dcfce7; color: var(--green);
+  animation: pulseGreenBadge 1.4s ease-in-out infinite;
+}
+@keyframes pulseGreenBadge {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.ssb-done { background: #d1fae5; color: #065f46; }
+
+/* Agent Activity in nav */
+.nav-agent-activity {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+  background: #f8faff;
+}
+.naa-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--dim); margin-bottom: 6px; }
+.naa-agent { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.naa-icon {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex-shrink: 0;
+}
+.naa-name { font-size: 11px; font-weight: 600; color: var(--text); }
+.naa-log {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.naa-log-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ─── MAIN CONTENT ────────────────────────────────────────────── */
+#main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.screen { display: none; flex-direction: column; gap: 16px; animation: fadeIn 0.3s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.screen-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.4px;
+}
+.screen-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* Cards */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 6px rgba(26,86,214,0.05);
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-border-blue { border-left: 3px solid var(--blue); }
+.card-border-teal { border-left: 3px solid var(--teal); }
+
+/* Form elements */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--muted); }
+.form-input {
+  height: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--text);
+  background: #f8faff;
+  transition: border-color 0.15s;
+}
+.form-input:focus { background: #fff; }
+.form-select {
+  height: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--text);
+  background: #f8faff;
+  cursor: pointer;
+}
+.info-tip {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #1e40af;
+  margin-top: 10px;
+}
+
+/* Config screen two-col */
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  letter-spacing: -0.2px;
+}
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(26,86,214,0.3);
+}
+.btn-primary:hover { background: var(--blue-dark); box-shadow: 0 4px 14px rgba(26,86,214,0.4); transform: translateY(-1px); }
+.btn-primary-green {
+  background: var(--teal);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(13,148,136,0.3);
+}
+.btn-primary-green:hover { background: #0b7a70; transform: translateY(-1px); }
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--blue);
+  color: var(--blue);
+}
+.btn-outline:hover { background: #eff6ff; }
+.btn-full { width: 100%; justify-content: center; font-size: 14px; height: 42px; }
+.btn-row { display: flex; gap: 10px; margin-top: 12px; }
+
+/* ─── SCREEN 2: CONNECTION TEST ───────────────────────────────── */
+.conn-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.conn-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.conn-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.conn-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.conn-icon-blue { background: #eff6ff; }
+.conn-icon-teal { background: #f0fdfa; }
+.conn-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.conn-status { font-size: 11px; margin-top: 2px; }
+.conn-testing { color: var(--amber); display: flex; align-items: center; gap: 5px; }
+.conn-connected { color: var(--green); display: flex; align-items: center; gap: 5px; }
+.conn-details { display: none; flex-direction: column; gap: 6px; animation: fadeIn 0.4s ease; }
+.conn-detail-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.conn-detail-label { color: var(--muted); }
+.conn-detail-value { font-weight: 600; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.conn-ok { color: var(--green); font-weight: 700; }
+
+.conn-log {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.conn-log-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 8px; }
+.conn-log-lines { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8; }
+.cll { opacity: 0; transform: translateY(4px); transition: all 0.3s ease; color: var(--muted); }
+.cll.show { opacity: 1; transform: translateY(0); }
+.cll .ts { color: var(--dim); margin-right: 6px; }
+.cll .ok { color: var(--green); font-weight: 600; }
+.cll .info { color: var(--blue); }
+
+.conn-success {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--green);
+  animation: fadeIn 0.4s ease;
+}
+
+/* Spinner */
+.spinner {
+  width: 12px; height: 12px;
+  border: 2px solid #fed7aa;
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── SCREEN 3: DISCOVERY ─────────────────────────────────────── */
+.disc-table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: #f8faff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+tbody tr:last-child { border-bottom: none; font-weight: 700; background: #f8faff; }
+tbody tr:hover:not(:last-child) { background: #f8faff; }
+tbody td { padding: 9px 12px; font-size: 12px; color: var(--text); }
+.disc-cb { width: 14px; height: 14px; accent-color: var(--blue); cursor: pointer; }
+.priority-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.pb-high { background: #dbeafe; color: var(--blue); }
+.pb-med { background: #fef3c7; color: var(--amber); }
+.pb-low { background: #dcfce7; color: var(--green); }
+
+.disc-row { opacity: 0; transform: translateY(4px); transition: all 0.3s ease; }
+.disc-row.show { opacity: 1; transform: translateY(0); }
+
+/* Advisor bubble */
+.advisor-bubble {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+.advisor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.advisor-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a56d6, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.advisor-name { font-size: 13px; font-weight: 700; }
+.advisor-role { font-size: 11px; color: var(--muted); }
+.advisor-text {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--blue);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #1e40af;
+}
+
+/* ─── SCREEN 4: SCHEMA MAPPING ────────────────────────────────── */
+.map-row { opacity: 0; transform: translateX(-6px); transition: all 0.35s ease; }
+.map-row.show { opacity: 1; transform: translateX(0); }
+.conf-bar {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700;
+}
+.conf-fill {
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--blue));
+}
+.map-status-ok { color: var(--green); font-weight: 600; font-size: 11px; }
+.arrow-cell { color: var(--muted); font-size: 14px; text-align: center; }
+
+/* ─── SCREEN 5: MIGRATION ─────────────────────────────────────── */
+.mig-row1 { display: flex; gap: 12px; height: 130px; }
+
+/* Agent Grid */
+.agent-grid-panel {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  overflow: hidden;
+}
+.agp-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--dim); margin-bottom: 6px; }
+.agent-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.agent-mini-card {
+  background: #f8faff;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s;
+}
+.agent-mini-card.running { background: #eff6ff; border-color: #bfdbfe; }
+.agent-mini-card.done { background: #f0fdf4; border-color: #86efac; }
+.agent-mini-card.error { background: #fef2f2; border-color: #fca5a5; }
+.amc-icon { font-size: 12px; flex-shrink: 0; }
+.amc-info { min-width: 0; }
+.amc-name { font-size: 9px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.amc-status { font-size: 8px; font-weight: 700; text-transform: uppercase; }
+.amc-idle { color: var(--dim); }
+.amc-running { color: var(--blue); animation: pulseGreenBadge 1s infinite; }
+.amc-done { color: var(--green); }
+.amc-error { color: var(--red); }
+
+/* Config panel */
+.config-panel {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.cp-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--dim); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.autotune-badge {
+  font-size: 8px; font-weight: 700;
+  background: #fef3c7; color: var(--amber);
+  padding: 1px 6px; border-radius: 3px;
+  animation: pulseGreenBadge 1.2s infinite;
+}
+.cp-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.cp-label { font-size: 11px; color: var(--muted); }
+.cp-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--text); }
+.cp-vms { color: var(--violet); }
+.cp-threads { color: var(--blue); }
+.cp-batch { color: var(--teal); }
+
+/* Metrics panel */
+.metrics-panel {
+  flex: 1;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.mp-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--dim); }
+.metrics-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.metric-item { display: flex; flex-direction: column; gap: 1px; }
+.metric-val { font-size: 22px; font-weight: 800; letter-spacing: -1px; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.metric-lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
+.mv-teal { color: var(--teal); }
+.mv-violet { color: var(--violet); }
+.mv-text { color: var(--text); }
+.mv-green { color: var(--green); }
+.mv-red { color: var(--red); }
+.mv-amber { color: var(--amber); }
+
+/* Chart panel */
+.chart-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+.chart-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+/* Progress bars panel */
+.progress-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  flex: 1;
+}
+.progress-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.prog-class { font-size: 11px; font-weight: 600; width: 110px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog-bar-bg {
+  flex: 1;
+  height: 10px;
+  background: #f1f5f9;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.prog-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--teal), var(--blue));
+  width: 0%;
+  transition: width 0.5s ease;
+}
+.prog-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); width: 95px; flex-shrink: 0; text-align: right; }
+
+/* Event feed */
+.event-feed-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ef-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 10px; flex-shrink: 0; }
+.ef-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ef-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.25s ease;
+}
+.ef-entry.show { opacity: 1; transform: translateY(0); }
+.ef-ts { color: var(--dim); flex-shrink: 0; }
+.ef-type {
+  font-size: 8px; font-weight: 700;
+  padding: 1px 4px; border-radius: 2px;
+  flex-shrink: 0; margin-top: 1px;
+}
+.ef-info { background: #dbeafe; color: var(--blue); }
+.ef-ok { background: #dcfce7; color: var(--green); }
+.ef-warn { background: #fee2e2; color: var(--red); }
+.ef-heal { background: #fef3c7; color: var(--amber); }
+.ef-done { background: #ccfbf1; color: var(--teal); }
+.ef-msg { color: var(--muted); }
+
+.mig-row3 { display: flex; gap: 12px; flex: 1; min-height: 0; }
+
+/* ─── SCREEN 6: RECONCILIATION ────────────────────────────────── */
+.recon-summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.recon-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+.recon-card-val { font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -1px; font-family: 'JetBrains Mono', monospace; }
+.recon-card-lbl { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+.recon-card-icon { font-size: 22px; margin-bottom: 4px; }
+.recon-card.green .recon-card-val { color: var(--green); }
+.recon-card.blue .recon-card-val { color: var(--blue); }
+.recon-card.amber .recon-card-val { color: var(--amber); }
+.recon-card.violet .recon-card-val { color: var(--violet); }
+
+.recon-table td:last-child { font-weight: 700; }
+.status-complete { color: var(--green); font-weight: 700; }
+.status-success { color: var(--teal); font-weight: 800; }
+
+.perf-summary {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.perf-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.perf-item { text-align: center; }
+.perf-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--text); }
+.perf-lbl { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 3px; }
+
+/* ─── AGENT PANEL (RIGHT) ─────────────────────────────────────── */
+#agent-panel {
+  width: 290px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ap-section {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ap-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+
+/* Active Agent Card */
+.active-agent-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 10px;
+}
+.aac-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+  position: relative;
+}
+.aac-avatar-gradient {
+  background: linear-gradient(135deg, #1a56d6, #7c3aed);
+  animation: avatarPulse 2s ease-in-out infinite;
+}
+@keyframes avatarPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(26,86,214,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(26,86,214,0.05); }
+}
+.aac-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.aac-role { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.aac-status { margin-top: 3px; }
+
+/* Tool call display */
+.tool-call-box {
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  line-height: 1.65;
+  overflow-x: auto;
+}
+.tc-label {
+  font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+.tc-fn { color: #f472b6; }
+.tc-key { color: #a78bfa; }
+.tc-str { color: #2dd4bf; }
+.tc-num { color: #fbbf24; }
+.tc-bool { color: #fb923c; }
+.tc-punct { color: #94a3b8; }
+.tc-response { color: #86efac; }
+.tc-dim { color: #475569; }
+
+/* Reasoning bubble */
+.reasoning-bubble {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #1e40af;
+  font-style: italic;
+}
+
+/* Mini log */
+.mini-log-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.mini-log-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ml-entry {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--muted);
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+}
+.ml-ts { color: var(--dim); flex-shrink: 0; }
+.ml-agent { font-weight: 700; flex-shrink: 0; }
+.ml-msg { color: var(--muted); }
+
+/* Dot separator */
+.sep { width: 100%; height: 1px; background: var(--border); }
+
+/* SVG Chart */
+#chart-svg {
+  width: 100%;
+  height: 120px;
+  overflow: visible;
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  #agent-panel { width: 250px; }
+  #step-nav { width: 170px; }
+/* ─── EMAIL MODAL STYLES ──────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-card {
+  width: 600px;
+  max-width: 90%;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+.modal-overlay.open .modal-card { transform: scale(1); }
+.modal-header {
+  padding: 16px 20px;
+  background: var(--white);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-title { font-size: 14px; font-weight: 800; color: var(--text); }
+.close-modal-btn {
+  background: transparent; border: none; font-size: 18px; color: var(--muted); cursor: pointer;
+}
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+.modal-footer {
+  padding: 14px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+</style>
 </head>
 <body>
 
-<!-- Aurora -->
-<div class="aurora">
-  <div class="orb o1"></div><div class="orb o2"></div>
-  <div class="orb o3"></div><div class="orb o4"></div>
+<!-- ═══ HEADER ════════════════════════════════════════════════════ -->
+<div id="header">
+  <div class="logo-wrap">
+    <div class="logo-gem">✦</div>
+    <div class="logo-name">AutoMigrate <span>AI</span></div>
+  </div>
+
+  <div class="header-center">
+    <div class="progress-dots" id="progress-dots">
+      <div class="pdot active" id="dot-1" title="Configuration"></div>
+      <div class="pdot" id="dot-2" title="Connection Test"></div>
+      <div class="pdot" id="dot-3" title="Discovery"></div>
+      <div class="pdot" id="dot-4" title="Schema Mapping"></div>
+      <div class="pdot" id="dot-5" title="Migration"></div>
+      <div class="pdot" id="dot-6" title="Reconciliation"></div>
+    </div>
+    <span id="step-label" class="pdot-label">Step 1 of 6</span>
+  </div>
+
+  <div class="header-right">
+    <div class="session-tag">MIG-20260528-001</div>
+    <div class="status-badge badge-idle" id="header-status">IDLE</div>
+  </div>
 </div>
 
-<!-- ══ AGENT FLOW MODAL ════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
+<!-- ═══ APP BODY ══════════════════════════════════════════════════ -->
+<div id="app-body">
 
-    <!-- Modal header -->
-    <div class="modal-hdr">
-      <div class="modal-title">
-        <div class="modal-title-gem">🕸️</div>
-        Agent Orchestration Flow
-        <span style="font-size:.7rem;color:var(--muted);font-weight:400">— Graphical Multi-Agent Execution</span>
-      </div>
-      <div class="modal-hdr-right">
-        <button class="modal-run-btn" id="modal-run-btn" onclick="startAgentFlow()">
-          ▶ Start Flow
-        </button>
-        <button class="modal-close" onclick="closeModal()">✕</button>
+  <!-- LEFT: Step Navigation -->
+  <div id="step-nav">
+    <div class="nav-section-title">Execution Mode</div>
+    <a href="execution-dashboard.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 10px 14px; padding: 10px; background: linear-gradient(135deg, #1a56d6, #7c3aed); color: white; text-decoration: none; border-radius: 6px; font-weight: 700; box-shadow: 0 4px 12px rgba(26, 86, 214, 0.2); transition: all 0.3s; font-size: 11.5px; border: 1px solid rgba(255,255,255,0.1);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(26, 86, 214, 0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(26, 86, 214, 0.2)';">
+      <span>⚡ Run Agent Flow</span>
+    </a>
+
+    <div class="nav-section-title">Migration Steps</div>
+
+    <div class="step-item active" id="nav-step-1" onclick="goToStep(1)">
+      <div class="step-circle active" id="circle-1">1</div>
+      <div class="step-info">
+        <div class="step-name">⚙️ Configuration</div>
+        <span class="step-status-badge ssb-active" id="badge-1">ACTIVE</span>
       </div>
     </div>
 
-    <!-- Agent status pills -->
-    <div class="modal-agents-row" id="agent-pills">
-      <div class="agent-pill" id="pill-orchestrator"><div class="agent-pill-dot"></div>🧠 Orchestrator</div>
-      <div class="agent-pill" id="pill-discovery"><div class="agent-pill-dot"></div>🔍 Discovery</div>
-      <div class="agent-pill" id="pill-mapper"><div class="agent-pill-dot"></div>🗺️ Mapper</div>
-      <div class="agent-pill" id="pill-tuning"><div class="agent-pill-dot"></div>⚡ Tuner</div>
-      <div class="agent-pill" id="pill-provisioner"><div class="agent-pill-dot"></div>🚀 Provisioner</div>
-      <div class="agent-pill" id="pill-watchdog"><div class="agent-pill-dot"></div>🛡️ Watchdog</div>
-      <div class="agent-pill" id="pill-reporter"><div class="agent-pill-dot"></div>✉️ Reporter</div>
+    <div class="step-item" id="nav-step-2" onclick="goToStep(2)">
+      <div class="step-circle" id="circle-2">2</div>
+      <div class="step-info">
+        <div class="step-name">🔌 Connection Test</div>
+        <span class="step-status-badge ssb-pending" id="badge-2">PENDING</span>
+      </div>
     </div>
 
-    <!-- Modal body: graph + log -->
-    <div class="modal-body">
-
-      <!-- SVG Graph -->
-      <div class="flow-graph">
-        <svg class="graph-svg" viewBox="0 0 520 360" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <pattern id="g" width="22" height="22" patternUnits="userSpaceOnUse">
-              <circle cx="11" cy="11" r=".7" fill="rgba(255,255,255,.05)"/>
-            </pattern>
-          </defs>
-          <rect width="520" height="360" fill="url(#g)"/>
-
-          <!-- Edges from center orchestrator (260,175) -->
-          <line id="ge-discovery"   class="ge" x1="260" y1="175" x2="130" y2="75"/>
-          <line id="ge-mapper"      class="ge" x1="260" y1="175" x2="260" y2="60"/>
-          <line id="ge-tuning"      class="ge" x1="260" y1="175" x2="390" y2="75"/>
-          <line id="ge-provisioner" class="ge" x1="260" y1="175" x2="420" y2="190"/>
-          <line id="ge-watchdog"    class="ge" x1="260" y1="175" x2="355" y2="295"/>
-          <line id="ge-reporter"    class="ge" x1="260" y1="175" x2="165" y2="295"/>
-          <line id="ge-db"          class="ge" x1="260" y1="175" x2="100"  y2="190"/>
-
-          <!-- Discovery (130,75) -->
-          <g id="gn-discovery" class="gn" style="--nc:#14b8a6" transform="translate(130,75)">
-            <circle r="32" fill="#0a0c20" stroke="rgba(20,184,166,.3)" stroke-width="1.5"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🔍</text>
-            <text text-anchor="middle" y="21" font-size="9" fill="rgba(20,184,166,.85)" font-family="'Google Sans'">Discovery</text>
-          </g>
-
-          <!-- Mapper (260,60) -->
-          <g id="gn-mapper" class="gn" style="--nc:#8b5cf6" transform="translate(260,60)">
-            <circle r="32" fill="#0a0c20" stroke="rgba(139,92,246,.3)" stroke-width="1.5"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🗺️</text>
-            <text text-anchor="middle" y="21" font-size="9" fill="rgba(139,92,246,.85)" font-family="'Google Sans'">Mapper</text>
-          </g>
-
-          <!-- Tuner (390,75) -->
-          <g id="gn-tuning" class="gn" style="--nc:#f59e0b" transform="translate(390,75)">
-            <circle r="32" fill="#0a0c20" stroke="rgba(245,158,11,.3)" stroke-width="1.5"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">⚡</text>
-            <text text-anchor="middle" y="21" font-size="9" fill="rgba(245,158,11,.85)" font-family="'Google Sans'">Tuner</text>
-          </g>
-
-          <!-- Provisioner (420,190) -->
-          <g id="gn-provisioner" class="gn" style="--nc:#3b82f6" transform="translate(420,190)">
-            <circle r="32" fill="#0a0c20" stroke="rgba(59,130,246,.3)" stroke-width="1.5"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🚀</text>
-            <text text-anchor="middle" y="21" font-size="9" fill="rgba(59,130,246,.85)" font-family="'Google Sans'">Provisioner</text>
-          </g>
-
-          <!-- Watchdog (355,295) -->
-          <g id="gn-watchdog" class="gn" style="--nc:#ef4444" transform="translate(355,295)">
-            <circle r="32" fill="#0a0c20" stroke="rgba(239,68,68,.3)" stroke-width="1.5"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🛡️</text>
-            <text text-anchor="middle" y="21" font-size="9" fill="rgba(239,68,68,.85)" font-family="'Google Sans'">Watchdog</text>
-          </g>
-
-          <!-- Reporter (165,295) -->
-          <g id="gn-reporter" class="gn" style="--nc:#10b981" transform="translate(165,295)">
-            <circle r="32" fill="#0a0c20" stroke="rgba(16,185,129,.3)" stroke-width="1.5"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">✉️</text>
-            <text text-anchor="middle" y="21" font-size="9" fill="rgba(16,185,129,.85)" font-family="'Google Sans'">Reporter</text>
-          </g>
-
-          <!-- DB (100,190) -->
-          <g id="gn-db" class="gn" style="--nc:#8ab4f8" transform="translate(100,190)">
-            <circle r="32" fill="#0a0c20" stroke="rgba(138,180,248,.3)" stroke-width="1.5"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="1" font-size="18">🗄️</text>
-            <text text-anchor="middle" y="21" font-size="9" fill="rgba(138,180,248,.85)" font-family="'Google Sans'">DB Agent</text>
-          </g>
-
-          <!-- ORCHESTRATOR CENTER (260,175) -->
-          <g id="gn-orchestrator" class="gn" style="--nc:#a78bfa" transform="translate(260,175)">
-            <circle r="44" fill="#0a0c20" stroke="rgba(167,139,250,.55)" stroke-width="2"/>
-            <text text-anchor="middle" dominant-baseline="middle" y="3" font-size="26">🧠</text>
-            <text text-anchor="middle" y="30" font-size="9.5" fill="rgba(167,139,250,.9)" font-family="'Google Sans'" font-weight="700">ORCHESTRATOR</text>
-          </g>
-        </svg>
-
-        <!-- Progress at bottom of graph -->
-        <div class="flow-progress-wrap">
-          <div class="flow-prog-label">
-            <span id="flow-prog-label">Ready — press Start Flow</span>
-            <span id="flow-prog-pct" style="color:var(--teal);font-family:var(--mono)">0%</span>
-          </div>
-          <div class="flow-pb-bg">
-            <div class="flow-pb-fill" id="flow-pb"></div>
-          </div>
-        </div>
+    <div class="step-item" id="nav-step-3" onclick="goToStep(3)">
+      <div class="step-circle" id="circle-3">3</div>
+      <div class="step-info">
+        <div class="step-name">🔍 Discovery</div>
+        <span class="step-status-badge ssb-pending" id="badge-3">PENDING</span>
       </div>
+    </div>
 
-      <!-- Log Panel -->
-      <div class="flow-log">
-        <div class="flow-log-hdr">
-          <span>⬡ Live Agent Log</span>
-          <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-        </div>
-        <div class="flow-log-body" id="flow-log">
-          <div class="le le-system">
-            <div class="le-top"><span class="le-agent" style="color:var(--muted)">SYSTEM</span><span class="le-type">info</span></div>
-            <div class="le-msg">Agent flow is ready. Press <strong>▶ Start Flow</strong> to begin the orchestration simulation.</div>
-          </div>
-        </div>
+    <div class="step-item" id="nav-step-4" onclick="goToStep(4)">
+      <div class="step-circle" id="circle-4">4</div>
+      <div class="step-info">
+        <div class="step-name">🗺️ Schema Mapping</div>
+        <span class="step-status-badge ssb-pending" id="badge-4">PENDING</span>
       </div>
+    </div>
 
-    </div><!-- /modal-body -->
-  </div><!-- /modal -->
-</div><!-- /modal-overlay -->
+    <div class="step-item" id="nav-step-5" onclick="goToStep(5)">
+      <div class="step-circle" id="circle-5">5</div>
+      <div class="step-info">
+        <div class="step-name">🚀 Migration</div>
+        <span class="step-status-badge ssb-pending" id="badge-5">PENDING</span>
+      </div>
+    </div>
 
-<!-- ══ MAIN SHELL ═══════════════════════════════════════════════ -->
-<div class="shell">
+    <div class="step-item" id="nav-step-6" onclick="goToStep(6)">
+      <div class="step-circle" id="circle-6">6</div>
+      <div class="step-info">
+        <div class="step-name">📊 Reconciliation</div>
+        <span class="step-status-badge ssb-pending" id="badge-6">PENDING</span>
+      </div>
+    </div>
 
-  <!-- Header -->
-  <header class="header">
-    <div class="brand">
-      <div class="brand-gem">⚡</div>
+    <!-- Agent Activity -->
+    <div class="nav-agent-activity">
+      <div class="naa-title">Agent Activity</div>
+      <div class="naa-agent">
+        <div class="naa-icon" id="naa-icon">⚙️</div>
+        <div class="naa-name" id="naa-name">Config Agent</div>
+      </div>
+      <div class="naa-log" id="naa-log">
+        <div class="naa-log-line" id="naa-l1">— awaiting input</div>
+        <div class="naa-log-line" id="naa-l2">— systems idle</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Main Content -->
+  <div id="main-content">
+
+    <!-- ── SCREEN 1: Configuration ────────────────────────────── -->
+    <div class="screen active" id="screen-1">
       <div>
-        <div class="brand-name">Rapidpro AI Assistant</div>
-        <div class="brand-sub">DB-Connected Migration Intelligence</div>
+        <div class="screen-title">⚙️ System Configuration</div>
+        <div class="screen-subtitle">Configure source and target systems for migration</div>
+      </div>
+
+      <div class="config-grid">
+        <!-- Source Card -->
+        <div class="card card-border-blue">
+          <div class="card-title" style="color:var(--blue);">
+            🖥️ SOURCE SYSTEM
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">System Type</label>
+            <select class="form-select">
+              <option selected>IBM FileNet P8</option>
+              <option>IBM Content Manager</option>
+              <option>Documentum</option>
+              <option>OpenText</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">Server URL</label>
+            <input class="form-input" value="https://cm-prod.corp.com" />
+          </div>
+          <div class="form-grid-2" style="margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Port</label>
+              <input class="form-input" value="9080" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Object Store</label>
+              <input class="form-input" value="PROD_OS" />
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input class="form-input" value="admin" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input class="form-input" type="password" value="password123" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Target Card -->
+        <div class="card card-border-teal">
+          <div class="card-title" style="color:var(--teal);">
+            ☁️ TARGET SYSTEM
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">System Type</label>
+            <select class="form-select">
+              <option selected>AWS S3</option>
+              <option>Azure Blob</option>
+              <option>SharePoint Online</option>
+              <option>Google Cloud Storage</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">Endpoint URL</label>
+            <input class="form-input" value="https://s3.amazonaws.com" />
+          </div>
+          <div class="form-grid-2" style="margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Access Key</label>
+              <input class="form-input" value="AKIA4X7K2M..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Secret Key</label>
+              <input class="form-input" type="password" value="secretkey123" />
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Bucket</label>
+              <input class="form-input" value="rp-migration" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Region</label>
+              <input class="form-input" value="us-east-1" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Migration Settings -->
+      <div class="card">
+        <div class="card-title" style="color:var(--violet);">⚡ MIGRATION SETTINGS</div>
+        <div class="form-grid-4">
+          <div class="form-group">
+            <label class="form-label">Initial Batch Size</label>
+            <input class="form-input" value="50,000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Batch Size</label>
+            <input class="form-input" value="200,000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Threads</label>
+            <input class="form-input" value="4" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Threads</label>
+            <input class="form-input" value="16" />
+          </div>
+        </div>
+        <div class="info-tip">🧠 <strong>Performance Tuner</strong> will automatically scale from initial to max values for optimal throughput across all document classes.</div>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="goToStep(2)">▶ Validate &amp; Connect Systems</button>
+    </div>
+
+    <!-- ── SCREEN 2: Connection Test ──────────────────────────── -->
+    <div class="screen" id="screen-2">
+      <div>
+        <div class="screen-title">🔌 Connection Test</div>
+        <div class="screen-subtitle">Verifying connectivity to both systems</div>
+      </div>
+
+      <div class="conn-cards">
+        <!-- Source -->
+        <div class="conn-card" id="conn-card-src">
+          <div class="conn-header">
+            <div class="conn-icon conn-icon-blue">🖥️</div>
+            <div>
+              <div class="conn-name">IBM FileNet P8</div>
+              <div class="conn-status conn-testing" id="src-status">
+                <div class="spinner"></div> TESTING...
+              </div>
+            </div>
+          </div>
+          <div class="conn-details" id="src-details">
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">Latency</span>
+              <span class="conn-detail-value conn-ok">14 ms</span>
+            </div>
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">Version</span>
+              <span class="conn-detail-value">FileNet P8 v5.5.7</span>
+            </div>
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">Object Store</span>
+              <span class="conn-detail-value">PROD_OS</span>
+            </div>
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">Doc Classes</span>
+              <span class="conn-detail-value conn-ok">12 classes found</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target -->
+        <div class="conn-card" id="conn-card-tgt">
+          <div class="conn-header">
+            <div class="conn-icon conn-icon-teal">☁️</div>
+            <div>
+              <div class="conn-name">AWS S3</div>
+              <div class="conn-status conn-testing" id="tgt-status">
+                <div class="spinner"></div> TESTING...
+              </div>
+            </div>
+          </div>
+          <div class="conn-details" id="tgt-details">
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">Latency</span>
+              <span class="conn-detail-value conn-ok">8 ms</span>
+            </div>
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">Bucket</span>
+              <span class="conn-detail-value">rp-migration</span>
+            </div>
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">IAM</span>
+              <span class="conn-detail-value conn-ok">PutObject ✓ GetObject ✓</span>
+            </div>
+            <div class="conn-detail-row">
+              <span class="conn-detail-label">ListBucket</span>
+              <span class="conn-detail-value conn-ok">✓ Accessible</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connection Log -->
+      <div class="conn-log">
+        <div class="conn-log-title">Connection Log</div>
+        <div class="conn-log-lines" id="conn-log-lines">
+          <div class="cll" id="cll-1"><span class="ts">18:45:52</span><span class="info">→</span> Initiating connection to cm-prod.corp.com:9080...</div>
+          <div class="cll" id="cll-2"><span class="ts">18:45:53</span><span class="info">→</span> Authenticating as admin (FileNet P8 LDAP)...</div>
+          <div class="cll" id="cll-3"><span class="ts">18:45:53</span><span class="ok">✓</span> IBM FileNet P8 v5.5.7 — CONNECTED (14ms)</div>
+          <div class="cll" id="cll-4"><span class="ts">18:45:54</span><span class="info">→</span> Connecting to s3.amazonaws.com (us-east-1)...</div>
+          <div class="cll" id="cll-5"><span class="ts">18:45:54</span><span class="info">→</span> Validating IAM credentials for bucket rp-migration...</div>
+          <div class="cll" id="cll-6"><span class="ts">18:45:55</span><span class="ok">✓</span> AWS S3 — CONNECTED (8ms) — All IAM permissions verified</div>
+        </div>
+      </div>
+
+      <div class="conn-success" id="conn-success">
+        <span style="font-size:20px;">✅</span>
+        Both systems connected successfully. Proceeding to Discovery...
       </div>
     </div>
-    <div class="hd-right">
-      <div class="badge b-green"><div class="dot"></div>migration_db Connected</div>
-      <div class="badge b-teal">⬡ MCP Active</div>
-      <div class="badge b-purple">7 Agents Ready</div>
+
+    <!-- ── SCREEN 3: Discovery ─────────────────────────────────── -->
+    <div class="screen" id="screen-3">
+      <div>
+        <div class="screen-title">🔍 Discovery Agent</div>
+        <div class="screen-subtitle" id="disc-subtitle">Scanning document classes in PROD_OS...</div>
+      </div>
+
+      <div class="disc-table-wrap">
+        <table id="disc-table">
+          <thead>
+            <tr>
+              <th style="width:36px;"></th>
+              <th>Document Class</th>
+              <th>Document Count</th>
+              <th>Total Size</th>
+              <th>% of Total</th>
+              <th>Priority</th>
+            </tr>
+          </thead>
+          <tbody id="disc-tbody">
+            <tr class="disc-row" id="dr-1">
+              <td><input type="checkbox" class="disc-cb" checked /></td>
+              <td><strong>LoanDocuments</strong></td>
+              <td>125,000</td>
+              <td>35.5 GB</td>
+              <td>35.7%</td>
+              <td><span class="priority-badge pb-high">🔵 HIGH</span></td>
+            </tr>
+            <tr class="disc-row" id="dr-2">
+              <td><input type="checkbox" class="disc-cb" checked /></td>
+              <td><strong>InvoiceRecords</strong></td>
+              <td>89,400</td>
+              <td>26.2 GB</td>
+              <td>25.5%</td>
+              <td><span class="priority-badge pb-med">🟡 MED</span></td>
+            </tr>
+            <tr class="disc-row" id="dr-3">
+              <td><input type="checkbox" class="disc-cb" checked /></td>
+              <td><strong>Contracts</strong></td>
+              <td>67,200</td>
+              <td>19.4 GB</td>
+              <td>19.2%</td>
+              <td><span class="priority-badge pb-med">🟡 MED</span></td>
+            </tr>
+            <tr class="disc-row" id="dr-4">
+              <td><input type="checkbox" class="disc-cb" checked /></td>
+              <td><strong>PolicyDocuments</strong></td>
+              <td>45,800</td>
+              <td>12.8 GB</td>
+              <td>13.1%</td>
+              <td><span class="priority-badge pb-low">🟢 LOW</span></td>
+            </tr>
+            <tr class="disc-row" id="dr-5">
+              <td><input type="checkbox" class="disc-cb" checked /></td>
+              <td><strong>AuditLogs</strong></td>
+              <td>22,600</td>
+              <td>6.1 GB</td>
+              <td>6.5%</td>
+              <td><span class="priority-badge pb-low">🟢 LOW</span></td>
+            </tr>
+            <tr class="disc-row" id="dr-total">
+              <td></td>
+              <td>TOTAL</td>
+              <td>350,000</td>
+              <td>100 GB</td>
+              <td>100%</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Advisor Bubble -->
+      <div class="advisor-bubble" id="advisor-bubble">
+        <div class="advisor-header">
+          <div class="advisor-avatar">📊</div>
+          <div>
+            <div class="advisor-name">Advisor Agent</div>
+            <div class="advisor-role">Migration Strategy Analyst</div>
+          </div>
+        </div>
+        <div class="advisor-text">
+          I recommend migrating <strong>LoanDocuments</strong> first (35.7%, highest volume). Use <strong>parallel processing</strong> across all 5 classes simultaneously for maximum throughput. Estimated completion: <strong>24 minutes</strong> at optimal throughput. All 5 classes should be migrated in this session.
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="alert('Selection Edit Mode: You can now check or uncheck document classes directly in the discovery table. Priority metrics will be recalculated automatically by the Discovery Agent.');">✎ Edit Selection</button>
+          <button class="btn btn-primary" onclick="goToStep(4)">✓ Confirm &amp; Proceed to Mapping</button>
+        </div>
+      </div>
     </div>
-  </header>
 
-  <!-- Workspace -->
-  <div class="workspace">
+    <!-- ── SCREEN 4: Schema Mapping ───────────────────────────── -->
+    <div class="screen" id="screen-4">
+      <div>
+        <div class="screen-title">🗺️ Schema Mapper Agent — Attribute Mapping</div>
+        <div class="screen-subtitle">IBM FileNet P8 → AWS S3 Metadata</div>
+      </div>
 
-    <!-- ── SIDEBAR ──────────────────────────────────────────── -->
-    <aside class="sidebar">
+      <div class="disc-table-wrap">
+        <table id="map-table">
+          <thead>
+            <tr>
+              <th>Source Attribute</th>
+              <th>Type</th>
+              <th style="text-align:center;">→</th>
+              <th>Target Attribute</th>
+              <th>Confidence</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="map-tbody">
+            <tr class="map-row" id="mr-1">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">document_id</code></td>
+              <td style="color:var(--muted);font-size:11px;">String</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">s3_object_key</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:40px;"></div> <span style="color:var(--teal);font-size:11px;font-weight:700;">100%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+            <tr class="map-row" id="mr-2">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">creator</code></td>
+              <td style="color:var(--muted);font-size:11px;">String</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">author</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:39px;"></div> <span style="color:var(--teal);font-size:11px;font-weight:700;">98%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+            <tr class="map-row" id="mr-3">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">created_date</code></td>
+              <td style="color:var(--muted);font-size:11px;">Date</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">created_at</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:40px;"></div> <span style="color:var(--teal);font-size:11px;font-weight:700;">100%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+            <tr class="map-row" id="mr-4">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">doc_class</code></td>
+              <td style="color:var(--muted);font-size:11px;">String</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">category</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:38px;"></div> <span style="color:var(--amber);font-size:11px;font-weight:700;">95%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+            <tr class="map-row" id="mr-5">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">title</code></td>
+              <td style="color:var(--muted);font-size:11px;">String</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">display_name</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:40px;"></div> <span style="color:var(--teal);font-size:11px;font-weight:700;">100%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+            <tr class="map-row" id="mr-6">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">status</code></td>
+              <td style="color:var(--muted);font-size:11px;">Enum</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">migration_status</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:36px;"></div> <span style="color:var(--amber);font-size:11px;font-weight:700;">90%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+            <tr class="map-row" id="mr-7">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">file_size_kb</code></td>
+              <td style="color:var(--muted);font-size:11px;">Integer</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">content_length</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:40px;"></div> <span style="color:var(--teal);font-size:11px;font-weight:700;">100%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+            <tr class="map-row" id="mr-8">
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--violet);">modified_date</code></td>
+              <td style="color:var(--muted);font-size:11px;">Date</td>
+              <td class="arrow-cell">→</td>
+              <td><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);">last_modified</code></td>
+              <td><div class="conf-bar"><div class="conf-fill" style="width:40px;"></div> <span style="color:var(--teal);font-size:11px;font-weight:700;">100%</span></div></td>
+              <td><span class="map-status-ok">✓ Auto-mapped</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      <!-- ▶ Run Agent Flow — main CTA -->
-      <button class="run-btn" onclick="openModal()">
-        <span class="run-btn-icon">▶</span> Run Agent Flow
+      <div class="card" id="map-summary" style="display:none;animation:fadeIn 0.4s ease;">
+        <div style="font-size:13px;font-weight:700;color:var(--green);">✓ 8/8 attributes mapped automatically. Confidence: 97.9% average. No manual intervention required.</div>
+      </div>
+
+      <!-- Mapping Advisor Bubble -->
+      <div class="advisor-bubble" id="map-advisor-bubble">
+        <div class="advisor-header">
+          <div class="advisor-avatar">🗺️</div>
+          <div>
+            <div class="advisor-name">Schema Mapper Agent</div>
+            <div class="advisor-role">Attribute Mapping Specialist</div>
+          </div>
+        </div>
+        <div class="advisor-text">
+          All <strong>8 source attributes</strong> successfully mapped to S3 metadata keys. Confidence averages <strong>97.9%</strong>. The <em>'doc_class' → 'category'</em> mapping (95%) may need review if custom classes exist, but standard classes match perfectly. Ready to proceed.
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="alert('Mapping Editor: You can double-click any mapped target attribute row in the schema table to manually adjust semantic overrides.');">✎ Edit Mapping</button>
+          <button class="btn btn-primary-green" onclick="goToStep(5)">✓ Validate &amp; Start Migration</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 5: Migration Execution ─────────────────────── -->
+    <div class="screen" id="screen-5" style="gap:10px;">
+      <div>
+        <div class="screen-title">🚀 Migration Execution Dashboard</div>
+        <div class="screen-subtitle" id="mig-subtitle">Initializing migration pipeline...</div>
+      </div>
+
+      <!-- Row 1: 3 panels -->
+      <div class="mig-row1">
+        <!-- Agent Grid -->
+        <div class="agent-grid-panel">
+          <div class="agp-title">Agent Status</div>
+          <div class="agent-mini-grid" id="agent-mini-grid">
+            <div class="agent-mini-card" id="amc-supervisor">
+              <div class="amc-icon">🧠</div>
+              <div class="amc-info">
+                <div class="amc-name">Supervisor</div>
+                <div class="amc-status amc-idle" id="amc-s-supervisor">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-planner">
+              <div class="amc-icon">📋</div>
+              <div class="amc-info">
+                <div class="amc-name">Job Planner</div>
+                <div class="amc-status amc-idle" id="amc-s-planner">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-tuner">
+              <div class="amc-icon">⚡</div>
+              <div class="amc-info">
+                <div class="amc-name">Perf Tuner</div>
+                <div class="amc-status amc-idle" id="amc-s-tuner">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-extractor">
+              <div class="amc-icon">📤</div>
+              <div class="amc-info">
+                <div class="amc-name">Extractor</div>
+                <div class="amc-status amc-idle" id="amc-s-extractor">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-transformer">
+              <div class="amc-icon">🔄</div>
+              <div class="amc-info">
+                <div class="amc-name">Transformer</div>
+                <div class="amc-status amc-idle" id="amc-s-transformer">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-loader">
+              <div class="amc-icon">📥</div>
+              <div class="amc-info">
+                <div class="amc-name">Loader</div>
+                <div class="amc-status amc-idle" id="amc-s-loader">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-validator">
+              <div class="amc-icon">✅</div>
+              <div class="amc-info">
+                <div class="amc-name">Validator</div>
+                <div class="amc-status amc-idle" id="amc-s-validator">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-error">
+              <div class="amc-icon">🔧</div>
+              <div class="amc-info">
+                <div class="amc-name">Error Rsv</div>
+                <div class="amc-status amc-idle" id="amc-s-error">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-checksum">
+              <div class="amc-icon">🔐</div>
+              <div class="amc-info">
+                <div class="amc-name">Checksum</div>
+                <div class="amc-status amc-idle" id="amc-s-checksum">IDLE</div>
+              </div>
+            </div>
+            <div class="agent-mini-card" id="amc-reporter">
+              <div class="amc-icon">📊</div>
+              <div class="amc-info">
+                <div class="amc-name">Reporter</div>
+                <div class="amc-status amc-idle" id="amc-s-reporter">IDLE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Config panel -->
+        <div class="config-panel">
+          <div class="cp-title">
+            Live Config
+            <span class="autotune-badge" id="autotune-badge" style="display:none;">AUTO-TUNING</span>
+          </div>
+          <div class="cp-row">
+            <span class="cp-label">Batch Size</span>
+            <span class="cp-value cp-batch" id="cp-batch">50,000</span>
+          </div>
+          <div class="cp-row">
+            <span class="cp-label">Threads</span>
+            <span class="cp-value cp-threads" id="cp-threads">4</span>
+          </div>
+          <div class="cp-row">
+            <span class="cp-label">Active VMs</span>
+            <span class="cp-value cp-vms">4</span>
+          </div>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
+            <div class="cp-row">
+              <span class="cp-label">Status</span>
+              <span class="cp-value" id="cp-status" style="color:var(--muted);font-size:10px;">INIT</span>
+            </div>
+            <div class="cp-row">
+              <span class="cp-label">Phase</span>
+              <span class="cp-value" id="cp-phase" style="color:var(--muted);font-size:10px;">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics panel -->
+        <div class="metrics-panel">
+          <div class="mp-title">Live Metrics</div>
+          <div class="metrics-row">
+            <div class="metric-item">
+              <div class="metric-val mv-teal" id="m-tput">0</div>
+              <div class="metric-lbl">docs/sec</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-val mv-violet" id="m-migrated">0</div>
+              <div class="metric-lbl">Migrated</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-val mv-text" id="m-remaining">350,000</div>
+              <div class="metric-lbl">Remaining</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-val mv-green" id="m-eta">—</div>
+              <div class="metric-lbl">ETA</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-val mv-red" id="m-errors">0</div>
+              <div class="metric-lbl">Errors</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-val mv-amber" id="m-healed">0</div>
+              <div class="metric-lbl">Healed</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Chart -->
+      <div class="chart-panel">
+        <div class="chart-title">⚡ Performance Tuner — Auto-scaling to Optimal Throughput</div>
+        <svg id="chart-svg" viewBox="0 0 700 120" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#0d9488" stop-opacity="0.05"/>
+            </linearGradient>
+          </defs>
+          <!-- Y axis labels -->
+          <text x="0" y="110" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">0</text>
+          <text x="0" y="86" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">1k</text>
+          <text x="0" y="62" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">2k</text>
+          <text x="0" y="38" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">3k</text>
+          <text x="0" y="14" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">4k+</text>
+          <!-- Horizontal grid lines -->
+          <line x1="22" y1="108" x2="695" y2="108" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="84" x2="695" y2="84" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="60" x2="695" y2="60" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="36" x2="695" y2="36" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="12" x2="695" y2="12" stroke="#f1f5f9" stroke-width="1"/>
+          <!-- Chart fill polygon -->
+          <polygon id="chart-fill" fill="url(#chartFill)" points=""/>
+          <!-- Chart line -->
+          <polyline id="chart-line" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points=""/>
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#0d9488"/>
+              <stop offset="100%" stop-color="#7c3aed"/>
+            </linearGradient>
+          </defs>
+          <!-- Optimal line -->
+          <line id="optimal-line" x1="22" y1="0" x2="695" y2="0" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="6,4" opacity="0"/>
+          <text id="optimal-label" x="540" y="0" fill="#16a34a" font-size="9" font-family="JetBrains Mono, monospace" font-weight="bold" opacity="0">OPTIMAL 4,380/s</text>
+          <!-- Data point circles will be added by JS -->
+          <g id="chart-points"></g>
+          <g id="chart-labels"></g>
+        </svg>
+      </div>
+
+      <!-- Row 3: Progress + Events -->
+      <div class="mig-row3">
+        <!-- Progress Bars -->
+        <div class="progress-panel">
+          <div class="progress-title">Migration Progress by Document Class</div>
+          <div class="prog-row">
+            <div class="prog-class">LoanDocuments</div>
+            <div class="prog-bar-bg"><div class="prog-bar-fill" id="pb-loan"></div></div>
+            <div class="prog-count" id="pc-loan">0 / 125,000</div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-class">InvoiceRecords</div>
+            <div class="prog-bar-bg"><div class="prog-bar-fill" id="pb-invoice"></div></div>
+            <div class="prog-count" id="pc-invoice">0 / 89,400</div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-class">Contracts</div>
+            <div class="prog-bar-bg"><div class="prog-bar-fill" id="pb-contracts"></div></div>
+            <div class="prog-count" id="pc-contracts">0 / 67,200</div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-class">PolicyDocuments</div>
+            <div class="prog-bar-bg"><div class="prog-bar-fill" id="pb-policy"></div></div>
+            <div class="prog-count" id="pc-policy">0 / 45,800</div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-class">AuditLogs</div>
+            <div class="prog-bar-bg"><div class="prog-bar-fill" id="pb-audit"></div></div>
+            <div class="prog-count" id="pc-audit">0 / 22,600</div>
+          </div>
+        </div>
+
+        <!-- Event Feed -->
+        <div class="event-feed-panel">
+          <div class="ef-title">⚡ Live Agent Events</div>
+          <div class="ef-scroll" id="ef-scroll"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 6: Reconciliation ───────────────────────────── -->
+    <div class="screen" id="screen-6">
+      <div>
+        <div class="screen-title">📊 Migration Reconciliation Report</div>
+        <div class="screen-subtitle">Session: MIG-20260528-001 — Completed 2026-05-28 19:13:44</div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="recon-summary-cards">
+        <div class="recon-card green">
+          <div class="recon-card-icon">📄</div>
+          <div class="recon-card-val">350,000</div>
+          <div class="recon-card-lbl">Total Documents</div>
+        </div>
+        <div class="recon-card blue">
+          <div class="recon-card-icon">🎯</div>
+          <div class="recon-card-val">100%</div>
+          <div class="recon-card-lbl">Source → Target Match</div>
+        </div>
+        <div class="recon-card amber">
+          <div class="recon-card-icon">🔧</div>
+          <div class="recon-card-val">1</div>
+          <div class="recon-card-lbl">Auto-Resolved Errors</div>
+        </div>
+        <div class="recon-card violet">
+          <div class="recon-card-icon">⏱️</div>
+          <div class="recon-card-val">28m 14s</div>
+          <div class="recon-card-lbl">Total Duration</div>
+        </div>
+      </div>
+
+      <!-- Reconciliation Table -->
+      <div class="disc-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Document Class</th>
+              <th>Source Count</th>
+              <th>Target Count</th>
+              <th>Delta</th>
+              <th>Checksum</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>LoanDocuments</strong></td>
+              <td>125,000</td>
+              <td>125,000</td>
+              <td style="color:var(--green);font-weight:700;">0</td>
+              <td style="color:var(--green);">✓ SHA-256</td>
+              <td class="status-complete">✅ Complete</td>
+            </tr>
+            <tr>
+              <td><strong>InvoiceRecords</strong></td>
+              <td>89,400</td>
+              <td>89,400</td>
+              <td style="color:var(--green);font-weight:700;">0</td>
+              <td style="color:var(--green);">✓ SHA-256</td>
+              <td class="status-complete">✅ Complete</td>
+            </tr>
+            <tr>
+              <td><strong>Contracts</strong></td>
+              <td>67,200</td>
+              <td>67,200</td>
+              <td style="color:var(--green);font-weight:700;">0</td>
+              <td style="color:var(--green);">✓ SHA-256</td>
+              <td class="status-complete">✅ Complete</td>
+            </tr>
+            <tr>
+              <td><strong>PolicyDocuments</strong></td>
+              <td>45,800</td>
+              <td>45,800</td>
+              <td style="color:var(--green);font-weight:700;">0</td>
+              <td style="color:var(--green);">✓ SHA-256</td>
+              <td class="status-complete">✅ Complete</td>
+            </tr>
+            <tr>
+              <td><strong>AuditLogs</strong></td>
+              <td>22,600</td>
+              <td>22,600</td>
+              <td style="color:var(--green);font-weight:700;">0</td>
+              <td style="color:var(--green);">✓ SHA-256</td>
+              <td class="status-complete">✅ Complete</td>
+            </tr>
+            <tr>
+              <td><strong>TOTAL</strong></td>
+              <td><strong>350,000</strong></td>
+              <td><strong>350,000</strong></td>
+              <td style="color:var(--green);font-weight:800;">0</td>
+              <td style="color:var(--teal);font-weight:700;">100%</td>
+              <td class="status-success">✅ SUCCESS</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Performance Summary -->
+      <div class="perf-summary">
+        <div class="card-title" style="color:var(--violet);margin-bottom:14px;">⚡ PERFORMANCE SUMMARY</div>
+        <div class="perf-grid">
+          <div class="perf-item">
+            <div class="perf-val" style="color:var(--teal);">4,410/s</div>
+            <div class="perf-lbl">Peak Throughput (B175k/T14)</div>
+          </div>
+          <div class="perf-item">
+            <div class="perf-val" style="color:var(--green);">4,380/s</div>
+            <div class="perf-lbl">Optimal Locked (B150k/T12)</div>
+          </div>
+          <div class="perf-item">
+            <div class="perf-val" style="color:var(--blue);">6</div>
+            <div class="perf-lbl">Auto-tuning Iterations</div>
+          </div>
+          <div class="perf-item">
+            <div class="perf-val" style="color:var(--amber);">1 (resolved)</div>
+            <div class="perf-lbl">Error Incidents</div>
+          </div>
+          <div class="perf-item">
+            <div class="perf-val" style="color:var(--green);">100%</div>
+            <div class="perf-lbl">Data Integrity (SHA-256)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="btn-row" style="justify-content:flex-start;">
+        <button class="btn btn-outline" onclick="openEmailReport()">📧 Email Client Report</button>
+        <button class="btn btn-primary" onclick="goToStep(1)">↺ Start New Migration</button>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+
+  <!-- RIGHT: Agent Panel -->
+  <div id="agent-panel">
+    <div class="ap-section">
+      <div class="ap-label">Active Agent</div>
+      <div class="active-agent-card">
+        <div class="aac-avatar aac-avatar-gradient" id="ap-avatar">⚙️</div>
+        <div>
+          <div class="aac-name" id="ap-agent-name">Config Agent</div>
+          <div class="aac-role" id="ap-agent-role">System Configuration</div>
+          <div class="aac-status">
+            <span class="status-badge badge-idle" id="ap-agent-status">IDLE</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ap-section">
+      <div class="ap-label">Tool Call</div>
+      <div class="tool-call-box" id="tc-box">
+        <div class="tc-label">▶ TOOL CALL</div>
+        <div id="tc-content">
+          <span class="tc-dim">// awaiting first call...</span>
+        </div>
+        <div class="tc-label" style="margin-top:8px;">← RESPONSE</div>
+        <div id="tc-response">
+          <span class="tc-dim">// no response yet</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ap-section">
+      <div class="ap-label">Supervisor Reasoning</div>
+      <div class="reasoning-bubble" id="ap-reasoning">
+        Waiting for user to initiate migration. System ready. All agents on standby.
+      </div>
+    </div>
+
+    <div class="mini-log-panel">
+      <div class="ap-section" style="border-bottom:none;padding-bottom:4px;">
+        <div class="ap-label">Live Agent Log</div>
+      </div>
+      <div class="mini-log-scroll" id="mini-log-scroll">
+        <div class="ml-entry">
+          <span class="ml-ts">18:45:51</span>
+          <span class="ml-agent" style="color:var(--blue);">SYS</span>
+          <span class="ml-msg">AutoMigrate AI initialized</span>
+        </div>
+        <div class="ml-entry">
+          <span class="ml-ts">18:45:51</span>
+          <span class="ml-agent" style="color:var(--muted);">CFG</span>
+          <span class="ml-msg">Form pre-populated with demo values</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-body -->
+
+<!-- EMAIL REPORT MODAL -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">✉️ Synthesized Daily Status Report (Ready to Email)</div>
+      <button class="close-modal-btn" onclick="closeEmailReport()">×</button>
+    </div>
+    <div class="modal-body" id="email-body-content">
+      <!-- Generated Report Content goes here -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" style="height:32px; font-size:11px; padding:0 12px; margin-right:4px;" onclick="closeEmailReport()">Close Preview</button>
+      <button class="btn btn-outline" style="height:32px; font-size:11px; padding:0 12px; margin-right:4px;" onclick="copyEmailHTML()">📋 Copy HTML</button>
+      <button class="btn btn-outline" style="height:32px; font-size:11px; padding:0 12px; margin-right:4px;" onclick="openInMailClient()">📧 Open Outlook</button>
+      <button class="btn btn-primary" style="height:32px; font-size:11px; padding:0 12px;" onclick="simulateEmailSend()">
+        <span>🚀 Send Report</span>
       </button>
-
-      <hr class="sb-div">
-
-      <!-- DB Connections -->
-      <div class="sb-label">🗄️ DB Connections</div>
-      <div class="db-conn-list">
-        <div class="db-conn">
-          <span class="db-conn-icon">🐘</span>
-          <div class="db-conn-info">
-            <div class="db-conn-name">migration_db</div>
-            <div class="db-conn-host">localhost:5432 · PostgreSQL</div>
-          </div>
-          <div class="conn-dot ok"></div>
-        </div>
-        <div class="db-conn">
-          <span class="db-conn-icon">🏢</span>
-          <div class="db-conn-info">
-            <div class="db-conn-name">IBM CM Source</div>
-            <div class="db-conn-host">cm-prod:1476 · DB2</div>
-          </div>
-          <div class="conn-dot ok"></div>
-        </div>
-        <div class="db-conn">
-          <span class="db-conn-icon">☁️</span>
-          <div class="db-conn-info">
-            <div class="db-conn-name">S3 Target</div>
-            <div class="db-conn-host">us-east-1 · AWS</div>
-          </div>
-          <div class="conn-dot ok"></div>
-        </div>
-      </div>
-
-      <hr class="sb-div">
-
-      <!-- MCP Servers -->
-      <div class="sb-label">⬡ MCP Servers</div>
-      <div class="mcp-list">
-        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">repo-mcp</span><span class="mcp-entry-port">:3001</span></div>
-        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">job-mcp</span><span class="mcp-entry-port">:3002</span></div>
-        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">db-mcp</span><span class="mcp-entry-port">:3003</span></div>
-        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">monitor-mcp</span><span class="mcp-entry-port">:3004</span></div>
-        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">migration-mcp</span><span class="mcp-entry-port">:3005</span></div>
-        <div class="mcp-entry"><div class="mcp-entry-dot active"></div><span class="mcp-entry-name">reporter-mcp</span><span class="mcp-entry-port">:3006</span></div>
-      </div>
-
-      <hr class="sb-div">
-      <div class="sb-note">Queries fetch live data from migration_db. The agent flow modal shows the full orchestration pipeline.</div>
-
-    </aside>
-
-    <!-- ── CHAT AREA ─────────────────────────────────────────── -->
-    <div class="chat-area">
-      <div class="chat-window" id="cw">
-
-        <!-- Welcome state -->
-        <div class="welcome" id="welcome">
-          <div class="w-gem">🧠</div>
-          <div class="w-title">Ask me anything</div>
-          <div class="w-sub">
-            I query your <strong>migration_db</strong> in real time to answer questions about jobs, throughput, failures, and more.
-            Use <strong>▶ Run Agent Flow</strong> in the sidebar to watch the full agent orchestration.
-          </div>
-          <div class="chips">
-            <div class="chip" onclick="useChip(this)">What is the current throughput?</div>
-            <div class="chip" onclick="useChip(this)">How many jobs failed today?</div>
-            <div class="chip" onclick="useChip(this)">Create 10 new migration jobs</div>
-            <div class="chip" onclick="useChip(this)">Create a new repository named IBM_CM_PROD_2</div>
-            <div class="chip" onclick="useChip(this)">Expected time to complete remaining documents?</div>
-            <div class="chip" onclick="useChip(this)">Show DB status of migration_items table</div>
-          </div>
-        </div>
-
-      </div><!-- /chat-window -->
-
-      <!-- Input -->
-      <div class="input-wrap">
-        <div id="fprow" style="max-width:760px;margin:0 auto .35rem;display:none">
-          <span class="file-pill" id="fpill">📎 <span id="fpname"></span></span>
-        </div>
-        <div class="input-bar">
-          <textarea class="pinput" id="pinput" rows="1"
-            placeholder="Ask about throughput, jobs, failures, DB status, ETAs…"
-            onkeydown="hkey(event)" oninput="resize(this)"></textarea>
-          <div class="iact">
-            <label class="up-btn" title="Upload schema file">📎
-              <input type="file" id="fup" accept=".csv,.json,.xlsx" onchange="hfile(event)">
-            </label>
-            <button class="send-btn" id="sbtn" onclick="doSend()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="input-hint">Rapidpro AI · Queries migration_db in real time · Use ▶ Run Agent Flow in sidebar for orchestration</div>
-      </div>
     </div>
+  </div>
+</div>
 
-  </div><!-- /workspace -->
-</div><!-- /shell -->
-
-<!-- ══════════════════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════════════════ -->
 <script>
-// ── State ─────────────────────────────────────────────────────
-let busy = false;
-let flowRunning = false;
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+let currentStep = 1;
+let running = false;
+let migState = {
+  progress: 0, migrated: 0, throughput: 0,
+  batchSize: 50000, threads: 4,
+  errors: 0, healed: 0, eta: 0
+};
+let classProgress = {
+  LoanDocuments: 0, InvoiceRecords: 0, Contracts: 0,
+  PolicyDocuments: 0, AuditLogs: 0
+};
+let classTotals = {
+  LoanDocuments: 125000, InvoiceRecords: 89400, Contracts: 67200,
+  PolicyDocuments: 45800, AuditLogs: 22600
+};
+let migTimers = [];
+let chartPoints = [];
+let miniLogCount = 0;
+const TOTAL_DOCS = 350000;
 
-// ── Utilities ─────────────────────────────────────────────────
-const D = ms => new Promise(r => setTimeout(r, ms));
-const ts = () => new Date().toLocaleTimeString('en-GB');
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const cw = () => document.getElementById('cw');
-function resize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,130)+'px'; }
-function scrollDown(){ cw().scrollTop = cw().scrollHeight; }
-function scrollLog(){ const l=document.getElementById('flow-log'); l.scrollTop=l.scrollHeight; }
-function useChip(el){ document.getElementById('pinput').value=el.textContent.trim(); resize(document.getElementById('pinput')); document.getElementById('pinput').focus(); }
-function hkey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); doSend(); } }
-function hfile(e){ const f=e.target.files[0]; if(!f) return; document.getElementById('fpname').textContent=f.name; document.getElementById('fprow').style.display='block'; }
-function hideWelcome(){ const w=document.getElementById('welcome'); if(w) w.remove(); }
-
-// ── Modal Open / Close ─────────────────────────────────────────
-function openModal(){
-  document.getElementById('modal').classList.add('open');
-}
-function closeModal(){
-  document.getElementById('modal').classList.remove('open');
-}
-// Close on backdrop click
-document.getElementById('modal').addEventListener('click', function(e){
-  if(e.target === this) closeModal();
-});
-
-// ── Chat message helpers ──────────────────────────────────────
-function addUser(text){
-  hideWelcome();
-  const el=document.createElement('div');
-  el.className='msg-row user';
-  el.innerHTML=`<div class="msg-bubble">${esc(text)}</div>`;
-  cw().appendChild(el); scrollDown();
-}
-function showTyping(){
-  const el=document.createElement('div'); el.className='msg-row agent'; el.id='typing';
-  el.innerHTML=`<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="dots"><span></span><span></span><span></span></div></div>`;
-  cw().appendChild(el); scrollDown();
-}
-function removeTyping(){ const t=document.getElementById('typing'); if(t) t.remove(); }
-function addAgent(avatar, html){
-  removeTyping();
-  const el=document.createElement('div'); el.className='msg-row agent';
-  el.innerHTML=`<div class="msg-avatar">${avatar}</div><div class="msg-bubble" style="max-width:82%">${html}</div>`;
-  cw().appendChild(el); scrollDown(); return el;
+/* ─── Time helper ─────────────────────────────────────────── */
+function now() {
+  const d = new Date();
+  return d.toTimeString().slice(0,8);
 }
 
-// ── DB Query Card builder ─────────────────────────────────────
-function dbCard({ db, sql, rowsTag, resultHTML }){
-  return `
-  <div class="db-card">
-    <div class="db-card-hdr">
-      <span class="db-icon">🗄️</span>
-      <span class="db-name">${esc(db)}</span>
-      <span class="db-pill conn">● Connected</span>
-      <span class="db-latency">⏱ ${8+Math.floor(Math.random()*18)}ms</span>
-      <span class="db-pill ok" style="margin-left:.3rem">✔ ${rowsTag}</span>
-    </div>
-    <div class="db-query-block">${sql}</div>
-    <div class="db-result-block">${resultHTML}</div>
-  </div>`;
+/* ─── Mini log ────────────────────────────────────────────── */
+function addMiniLog(agent, msg, color) {
+  color = color || '#64748b';
+  const scroll = document.getElementById('mini-log-scroll');
+  const entry = document.createElement('div');
+  entry.className = 'ml-entry';
+  entry.innerHTML = `<span class="ml-ts">${now()}</span><span class="ml-agent" style="color:${color};">${agent}</span><span class="ml-msg">${msg}</span>`;
+  scroll.appendChild(entry);
+  if (scroll.children.length > 50) scroll.removeChild(scroll.firstChild);
+  scroll.scrollTop = scroll.scrollHeight;
 }
 
-// ── Mock DB Responses ─────────────────────────────────────────
-
-async function resp_throughput(){
-  await D(300);
-  const sql = `<span class="kw">SELECT</span> current_throughput, peak_throughput, avg_throughput,
-  threads, batch_size, active_vms
-<span class="kw">FROM</span> <span class="tbl">job_metrics</span>
-<span class="kw">WHERE</span> snapshot_time = <span class="val">DATE_TRUNC('hour', NOW())</span>
-<span class="kw">ORDER BY</span> snapshot_time <span class="kw">DESC LIMIT</span> <span class="val">1</span>;`;
-
-  const result = `<div class="rt">
-    <div class="rr"><span class="rl">current_throughput</span><span class="rv ok">4,150 docs/sec</span></div>
-    <div class="rr"><span class="rl">peak_throughput</span><span class="rv">5,820 docs/sec</span></div>
-    <div class="rr"><span class="rl">avg_throughput (7d)</span><span class="rv">3,940 docs/sec</span></div>
-    <div class="rr"><span class="rl">batch_size</span><span class="rv">75,000 (auto-tuned)</span></div>
-    <div class="rr"><span class="rl">threads</span><span class="rv">8</span></div>
-    <div class="rr"><span class="rl">active_vms</span><span class="rv ok">4</span></div>
-  </div>`;
-  return `<p>Fetched from <strong>job_metrics</strong> table in <strong>migration_db</strong>:</p>
-  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'1 row', resultHTML:result })}
-  <p style="margin-top:.5rem;color:var(--muted);font-size:.82rem">Current throughput is running <strong style="color:var(--teal)">+8% above yesterday's average</strong>. All 4 VMs are at peak efficiency.</p>`;
+/* ─── Update agent panel ──────────────────────────────────── */
+function updateAgentPanel(emoji, name, role, statusClass, statusText, tcContent, tcResponse, reasoning) {
+  document.getElementById('ap-avatar').textContent = emoji;
+  document.getElementById('ap-agent-name').textContent = name;
+  document.getElementById('ap-agent-role').textContent = role;
+  const sb = document.getElementById('ap-agent-status');
+  sb.className = 'status-badge ' + statusClass;
+  sb.textContent = statusText;
+  if (tcContent !== null) document.getElementById('tc-content').innerHTML = tcContent;
+  if (tcResponse !== null) document.getElementById('tc-response').innerHTML = tcResponse;
+  if (reasoning !== null) document.getElementById('ap-reasoning').textContent = reasoning;
 }
 
-async function resp_failed(){
-  await D(300);
-  const sql = `<span class="kw">SELECT</span> job_id, status, error_type, failed_at, vm_node
-<span class="kw">FROM</span> <span class="tbl">migration_jobs</span>
-<span class="kw">WHERE</span> status = <span class="val">'FAILED'</span>
-  <span class="kw">AND</span> DATE(failed_at) = <span class="val">CURRENT_DATE</span>
-<span class="kw">ORDER BY</span> failed_at <span class="kw">DESC</span>;`;
+/* ─── Syntax highlight helpers ────────────────────────────── */
+function tcFn(s) { return `<span class="tc-fn">${s}</span>`; }
+function tcKey(s) { return `<span class="tc-key">${s}</span>`; }
+function tcStr(s) { return `<span class="tc-str">"${s}"</span>`; }
+function tcNum(s) { return `<span class="tc-num">${s}</span>`; }
+function tcPunct(s) { return `<span class="tc-punct">${s}</span>`; }
+function tcResp(s) { return `<span class="tc-response">${s}</span>`; }
+function tcDim(s) { return `<span class="tc-dim">${s}</span>`; }
+function tcBool(s) { return `<span class="tc-bool">${s}</span>`; }
 
-  const rows = [
-    ['JOB-034','FAILED','Timeout','10:14:22','VM-2'],
-    ['JOB-027','FAILED','Deadlock','08:52:10','VM-3'],
-    ['JOB-041','FAILED','OOM','07:30:45','VM-1'],
-    ['JOB-018','FAILED','NullRef','06:11:03','VM-4'],
-  ];
-  const table = `<table style="width:100%;font-size:.72rem;border-collapse:collapse;font-family:var(--mono)">
-    <tr style="color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06)">
-      <td style="padding:.22rem .3rem">job_id</td><td>error_type</td><td>failed_at</td><td>vm_node</td>
-    </tr>
-    ${rows.map(([id,s,e,t,v])=>`<tr style="border-bottom:1px solid rgba(255,255,255,.04)">
-      <td style="padding:.22rem .3rem;color:var(--pink)">${id}</td>
-      <td style="color:var(--yellow)">${e}</td>
-      <td style="color:var(--muted)">${t}</td>
-      <td style="color:var(--blue)">${v}</td>
-    </tr>`).join('')}
-  </table>
-  <button class="act-btn" onclick="alert('retry_failed_jobs() → job-mcp:3002 dispatched!')">⟳ Retry All Failed Jobs</button>`;
-
-  return `<p>Queried <strong>migration_jobs</strong> for today's failures:</p>
-  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'4 rows', resultHTML:table })}`;
+/* ─── NAA update ─────────────────────────────────────────── */
+function updateNAA(icon, name, l1, l2) {
+  document.getElementById('naa-icon').textContent = icon;
+  document.getElementById('naa-name').textContent = name;
+  document.getElementById('naa-l1').textContent = l1;
+  document.getElementById('naa-l2').textContent = l2;
 }
 
-async function resp_createJobs(count){
-  await D(400);
-  const sql = `<span class="kw">INSERT INTO</span> <span class="tbl">migration_jobs</span>
-  (job_name, batch_size, thread_count, status, created_at)
-<span class="kw">SELECT</span>
-  <span class="val">'BATCH_JOB_' || generate_series(43, ${42+count})</span>,
-  <span class="val">75000</span>, <span class="val">8</span>, <span class="val">'QUEUED'</span>, <span class="val">NOW()</span>
-<span class="kw">RETURNING</span> job_id, status;`;
+/* ═══════════════════════════════════════════════════════════════
+   goToStep — central navigation
+═══════════════════════════════════════════════════════════════ */
+function goToStep(n) {
+  // Kill any running migration timers if navigating away
+  if (n !== currentStep && currentStep === 5) {
+    migTimers.forEach(t => clearTimeout(t));
+    migTimers = [];
+  }
 
-  const ids = Array.from({length:count},(_,i)=>`JOB-${String(43+i).padStart(3,'0')}`);
-  const result = `<div class="rt" style="margin-bottom:.4rem">
-    <div class="rr"><span class="rl">rows inserted</span><span class="rv ok">${count}</span></div>
-    <div class="rr"><span class="rl">batch_size</span><span class="rv">75,000</span></div>
-    <div class="rr"><span class="rl">thread_count</span><span class="rv">8</span></div>
-    <div class="rr"><span class="rl">status</span><span class="rv ok">QUEUED</span></div>
-  </div>
-  <div style="font-size:.68rem;color:var(--muted);margin-bottom:.3rem">Created Job IDs:</div>
-  <div class="jgrid">${ids.map(id=>`<div class="jchip">${id}</div>`).join('')}</div>`;
+  const prev = currentStep;
+  currentStep = n;
 
-  return `<p><strong>${count} jobs</strong> inserted into <strong>migration_jobs</strong>:</p>
-  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:`${count} rows inserted`, resultHTML:result })}`;
+  // Update progress dots
+  for (let i = 1; i <= 6; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.classList.remove('done','active');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  }
+  document.getElementById('step-label').textContent = `Step ${n} of 6`;
+
+  // Update nav items
+  for (let i = 1; i <= 6; i++) {
+    const item = document.getElementById('nav-step-' + i);
+    const circle = document.getElementById('circle-' + i);
+    const badge = document.getElementById('badge-' + i);
+    item.classList.remove('active','done');
+    circle.classList.remove('active','done');
+    badge.className = 'step-status-badge';
+
+    if (i < n) {
+      item.classList.add('done');
+      circle.classList.add('done');
+      circle.textContent = '✓';
+      badge.classList.add('ssb-done');
+      badge.textContent = 'DONE';
+    } else if (i === n) {
+      item.classList.add('active');
+      circle.classList.add('active');
+      circle.textContent = i;
+      badge.classList.add('ssb-active');
+      badge.textContent = 'ACTIVE';
+    } else {
+      circle.textContent = i;
+      badge.classList.add('ssb-pending');
+      badge.textContent = 'PENDING';
+    }
+  }
+
+  // Show correct screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  document.getElementById('main-content').scrollTop = 0;
+
+  // Trigger screen simulations
+  if (n === 1) startStep1();
+  else if (n === 2) startStep2();
+  else if (n === 3) startStep3();
+  else if (n === 4) startStep4();
+  else if (n === 5) startStep5();
+  else if (n === 6) startStep6();
 }
 
-async function resp_createRepo(name){
-  await D(400);
-  const sql = `<span class="kw">INSERT INTO</span> <span class="tbl">repositories</span>
-  (repo_name, repo_type, region, connection_status, created_at)
-<span class="kw">VALUES</span> (
-  <span class="val">'${esc(name)}'</span>, <span class="val">'IBM_CM'</span>,
-  <span class="val">'us-east-1'</span>, <span class="val">'CONNECTED'</span>, <span class="val">NOW()</span>
-)
-<span class="kw">RETURNING</span> repo_id, repo_name, connection_status;`;
-
-  const result = `<div class="rt">
-    <div class="rr"><span class="rl">repo_id</span><span class="rv ok">REPO-003</span></div>
-    <div class="rr"><span class="rl">repo_name</span><span class="rv">${esc(name)}</span></div>
-    <div class="rr"><span class="rl">repo_type</span><span class="rv">IBM Content Manager</span></div>
-    <div class="rr"><span class="rl">region</span><span class="rv">us-east-1</span></div>
-    <div class="rr"><span class="rl">connection_status</span><span class="rv ok">CONNECTED ✔</span></div>
-    <div class="rr"><span class="rl">latency</span><span class="rv ok">9ms</span></div>
-  </div>`;
-
-  return `<p>Repository <strong>${esc(name)}</strong> created in <strong>repositories</strong> table:</p>
-  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'1 row inserted', resultHTML:result })}`;
+/* ═══════════════════════════════════════════════════════════════
+   STEP 1: Configuration
+═══════════════════════════════════════════════════════════════ */
+function startStep1() {
+  document.getElementById('header-status').className = 'status-badge badge-idle';
+  document.getElementById('header-status').textContent = 'IDLE';
+  updateAgentPanel('⚙️','Config Agent','System Configuration','badge-idle','IDLE',
+    tcDim('// Awaiting configuration...'),
+    tcDim('// No call made yet'),
+    'Waiting for user to complete source and target system configuration. All fields pre-populated with production values.'
+  );
+  updateNAA('⚙️','Config Agent','— awaiting input','— form ready');
+  addMiniLog('CFG','Configuration screen active','#1a56d6');
 }
 
-async function resp_eta(){
-  await D(300);
-  const sql = `<span class="kw">SELECT</span>
-  total_docs, completed_docs,
-  (total_docs - completed_docs) AS remaining_docs,
-  ROUND((completed_docs::NUMERIC / total_docs) * 100, 1) AS pct_done,
-  current_throughput,
-  ROUND((total_docs - completed_docs) / current_throughput / 60.0, 1) AS eta_minutes
-<span class="kw">FROM</span> <span class="tbl">migration_summary</span>
-<span class="kw">WHERE</span> run_date = <span class="val">CURRENT_DATE</span>;`;
+/* ═══════════════════════════════════════════════════════════════
+   STEP 2: Connection Test
+═══════════════════════════════════════════════════════════════ */
+function startStep2() {
+  // Reset state
+  document.getElementById('src-status').className = 'conn-status conn-testing';
+  document.getElementById('src-status').innerHTML = '<div class="spinner"></div> TESTING...';
+  document.getElementById('tgt-status').className = 'conn-status conn-testing';
+  document.getElementById('tgt-status').innerHTML = '<div class="spinner"></div> TESTING...';
+  document.getElementById('src-details').style.display = 'none';
+  document.getElementById('tgt-details').style.display = 'none';
+  document.getElementById('conn-success').style.display = 'none';
+  document.querySelectorAll('.cll').forEach(el => el.classList.remove('show'));
 
-  const pct = 60.7;
-  const result = `<div class="rt" style="margin-bottom:.5rem">
-    <div class="rr"><span class="rl">total_docs</span><span class="rv">350,000</span></div>
-    <div class="rr"><span class="rl">completed_docs</span><span class="rv ok">212,450</span></div>
-    <div class="rr"><span class="rl">remaining_docs</span><span class="rv mid">137,550</span></div>
-    <div class="rr"><span class="rl">pct_done</span><span class="rv ok">${pct}%</span></div>
-    <div class="rr"><span class="rl">current_throughput</span><span class="rv ok">4,150 docs/sec</span></div>
-    <div class="rr"><span class="rl">eta_minutes</span><span class="rv ok">~33.7 min</span></div>
-  </div>
-  <div style="font-size:.7rem;color:var(--muted);margin-bottom:.3rem">Progress — ${pct}%</div>
-  <div class="pb-bg"><div class="pb-fill" style="width:${pct}%"></div></div>`;
+  document.getElementById('header-status').className = 'status-badge badge-running';
+  document.getElementById('header-status').textContent = 'RUNNING';
 
-  return `<p>ETA calculated directly from <strong>migration_summary</strong>:</p>
-  ${dbCard({ db:'migration_db @ localhost:5432', sql, rowsTag:'1 row', resultHTML:result })}
-  <p style="margin-top:.5rem;color:var(--muted);font-size:.82rem">At current throughput of <strong style="color:var(--teal)">4,150 docs/sec</strong>, remaining <strong>137,550 documents</strong> will complete in approximately <strong style="color:var(--teal)">~34 minutes</strong>.</p>`;
+  updateAgentPanel('🔌','Connection Agent','System Connectivity','badge-running','RUNNING',
+    tcDim('// Initiating connection tests...'),
+    tcDim('// Pending...'),
+    'Testing connectivity to both source and target systems. Will verify authentication, latency, and permissions.'
+  );
+  updateNAA('🔌','Connection Agent','testConnection(src)','verifying credentials...');
+  addMiniLog('CON','Starting connection tests...','#d97706');
+
+  const t = (ms, fn) => setTimeout(fn, ms);
+
+  // Show log lines sequentially
+  t(400, () => document.getElementById('cll-1').classList.add('show'));
+  t(900, () => {
+    document.getElementById('cll-2').classList.add('show');
+    updateAgentPanel('🔌','Connection Agent','System Connectivity','badge-running','RUNNING',
+      `${tcFn('testConnection')}${tcPunct('(')}\n  ${tcKey('host')}: ${tcStr('cm-prod.corp.com')},\n  ${tcKey('port')}: ${tcNum('9080')},\n  ${tcKey('user')}: ${tcStr('admin')}\n${tcPunct(')')}`,
+      tcDim('// connecting...'),
+      'Sending TCP connection to FileNet P8. Authenticating with LDAP credentials. Enumerating object stores.'
+    );
+  });
+  t(1500, () => {
+    document.getElementById('cll-3').classList.add('show');
+    document.getElementById('src-status').className = 'conn-status conn-connected';
+    document.getElementById('src-status').innerHTML = '✓ CONNECTED';
+    document.getElementById('src-details').style.display = 'flex';
+    document.getElementById('src-details').style.flexDirection = 'column';
+    document.getElementById('src-details').style.gap = '6px';
+    updateAgentPanel('🔌','Connection Agent','System Connectivity','badge-running','RUNNING',
+      `${tcFn('testConnection')}${tcPunct('(')}\n  ${tcKey('host')}: ${tcStr('cm-prod.corp.com')},\n  ${tcKey('port')}: ${tcNum('9080')}\n${tcPunct(')')}`,
+      `${tcPunct('{')}\n  ${tcKey('status')}: ${tcStr('CONNECTED')},\n  ${tcKey('latency')}: ${tcNum('14')}${tcDim('ms')},\n  ${tcKey('version')}: ${tcStr('FileNet P8 v5.5.7')},\n  ${tcKey('objectStores')}: ${tcNum('1')}\n${tcPunct('}')}`,
+      'Source system connected. 14ms latency is excellent. FileNet P8 v5.5.7 detected. PROD_OS object store accessible.'
+    );
+    addMiniLog('CON','FileNet P8 CONNECTED (14ms)','#16a34a');
+  });
+  t(2400, () => document.getElementById('cll-4').classList.add('show'));
+  t(3000, () => {
+    document.getElementById('cll-5').classList.add('show');
+    updateAgentPanel('🔌','Connection Agent','System Connectivity','badge-running','RUNNING',
+      `${tcFn('testConnection')}${tcPunct('(')}\n  ${tcKey('endpoint')}: ${tcStr('s3.amazonaws.com')},\n  ${tcKey('bucket')}: ${tcStr('rp-migration')},\n  ${tcKey('region')}: ${tcStr('us-east-1')}\n${tcPunct(')')}`,
+      tcDim('// connecting to AWS...'),
+      'Now testing AWS S3 endpoint. Will validate IAM permissions: PutObject, GetObject, ListBucket required for migration.'
+    );
+  });
+  t(3800, () => {
+    document.getElementById('cll-6').classList.add('show');
+    document.getElementById('tgt-status').className = 'conn-status conn-connected';
+    document.getElementById('tgt-status').innerHTML = '✓ CONNECTED';
+    document.getElementById('tgt-details').style.display = 'flex';
+    document.getElementById('tgt-details').style.flexDirection = 'column';
+    document.getElementById('tgt-details').style.gap = '6px';
+    updateAgentPanel('🔌','Connection Agent','System Connectivity','badge-running','RUNNING',
+      `${tcFn('testConnection')}${tcPunct('(')}\n  ${tcKey('endpoint')}: ${tcStr('s3.amazonaws.com')},\n  ${tcKey('bucket')}: ${tcStr('rp-migration')}\n${tcPunct(')')}`,
+      `${tcPunct('{')}\n  ${tcKey('status')}: ${tcStr('CONNECTED')},\n  ${tcKey('latency')}: ${tcNum('8')}${tcDim('ms')},\n  ${tcKey('PutObject')}: ${tcBool('true')},\n  ${tcKey('GetObject')}: ${tcBool('true')},\n  ${tcKey('ListBucket')}: ${tcBool('true')}\n${tcPunct('}')}`,
+      'Both systems connected. AWS S3 shows 8ms latency — excellent. All required IAM permissions verified. Proceeding to Discovery.'
+    );
+    addMiniLog('CON','AWS S3 CONNECTED (8ms)','#16a34a');
+  });
+  t(4500, () => {
+    const s = document.getElementById('conn-success');
+    s.style.display = 'flex';
+    addMiniLog('CON','Both systems connected. Advancing...','#0d9488');
+    updateAgentPanel('🔌','Connection Agent','System Connectivity','badge-done','DONE', null, null,
+      'Both connections verified successfully. 14ms and 8ms latencies are well within acceptable range. Handing off to Discovery Agent.'
+    );
+    document.getElementById('header-status').className = 'status-badge badge-done';
+    document.getElementById('header-status').textContent = 'CONNECTED';
+  });
+  t(6000, () => {
+    goToStep(3);
+  });
 }
 
-async function resp_dbStatus(){
-  await D(350);
-  const sql = `<span class="kw">SELECT</span>
-  relname AS table_name,
-  n_live_tup AS total_rows,
-  pg_size_pretty(pg_total_relation_size(relid)) AS table_size,
-  idx_scan AS index_scans,
-  n_dead_tup AS dead_rows
-<span class="kw">FROM</span> <span class="tbl">pg_stat_user_tables</span>
-<span class="kw">WHERE</span> relname = <span class="val">'migration_items'</span>;
+/* ═══════════════════════════════════════════════════════════════
+   STEP 3: Discovery
+═══════════════════════════════════════════════════════════════ */
+function startStep3() {
+  // Reset
+  document.querySelectorAll('.disc-row').forEach(r => r.classList.remove('show'));
+  document.getElementById('advisor-bubble').style.display = 'none';
+  document.getElementById('disc-subtitle').textContent = 'Scanning document classes in PROD_OS...';
+  document.getElementById('header-status').className = 'status-badge badge-running';
+  document.getElementById('header-status').textContent = 'RUNNING';
 
-<span class="cmt">-- Row lock status</span>
-<span class="kw">SELECT</span> COUNT(*) AS locked_rows <span class="kw">FROM</span> <span class="tbl">pg_locks</span>
-<span class="kw">WHERE</span> relation = <span class="val">'migration_items'</span>::regclass;`;
+  updateAgentPanel('🔍','Discovery Agent','Document Class Scanner','badge-running','RUNNING',
+    `${tcFn('listDocumentClasses')}${tcPunct('(')}\n  ${tcKey('objectStore')}: ${tcStr('PROD_OS')},\n  ${tcKey('includeCount')}: ${tcBool('true')}\n${tcPunct(')')}`,
+    tcDim('// scanning...'),
+    'Enumerating all document classes in PROD_OS object store. Will retrieve document counts and size estimates for each class.'
+  );
+  updateNAA('🔍','Discovery Agent','listDocumentClasses()','scanning PROD_OS...');
+  addMiniLog('DIS','Discovery started — PROD_OS','#7c3aed');
 
-  const result = `<div class="rt">
-    <div class="rr"><span class="rl">table_name</span><span class="rv">migration_items</span></div>
-    <div class="rr"><span class="rl">total_rows</span><span class="rv">350,000</span></div>
-    <div class="rr"><span class="rl">table_size</span><span class="rv">28.4 GB</span></div>
-    <div class="rr"><span class="rl">index_scans</span><span class="rv ok">2,841,300</span></div>
-    <div class="rr"><span class="rl">dead_rows</span><span class="rv ok">0 (vacuum healthy)</span></div>
-    <div class="rr"><span class="rl">locked_rows</span><span class="rv ok">0 (no active locks)</span></div>
-    <div class="rr"><span class="rl">query_latency</span><span class="rv ok">12ms</span></div>
-  </div>`;
+  const rows = ['dr-1','dr-2','dr-3','dr-4','dr-5','dr-total'];
+  rows.forEach((id, i) => {
+    setTimeout(() => {
+      document.getElementById(id).classList.add('show');
+      if (i === 0) {
+        updateAgentPanel('🔍','Discovery Agent','Document Class Scanner','badge-running','RUNNING',
+          `${tcFn('getDocumentCount')}${tcPunct('(')}\n  ${tcKey('className')}: ${tcStr('LoanDocuments')},\n  ${tcKey('objectStore')}: ${tcStr('PROD_OS')}\n${tcPunct(')')}`,
+          `${tcPunct('{')}\n  ${tcKey('count')}: ${tcNum('125000')},\n  ${tcKey('sizeGB')}: ${tcNum('35.5')}\n${tcPunct('}')}`,
+          'Found LoanDocuments class with 125,000 documents. Highest volume class — will be priority for migration planning.'
+        );
+        addMiniLog('DIS','LoanDocuments: 125,000 docs','#7c3aed');
+      }
+      if (i === 2) {
+        addMiniLog('DIS','Contracts: 67,200 docs','#7c3aed');
+      }
+      if (i === 4) {
+        addMiniLog('DIS','Discovery complete: 350,000 total','#16a34a');
+      }
+    }, 400 + i * 350);
+  });
 
-  return `<p>DB health check on <strong>migration_items</strong>:</p>
-  ${dbCard({ db:'migration_db @ localhost:5432 (PostgreSQL 15.2)', sql, rowsTag:'1 row', resultHTML:result })}
-  <p style="margin-top:.5rem;color:var(--muted);font-size:.82rem">Table is healthy — no row locks, no dead tuples, and vacuum is current.</p>`;
+  setTimeout(() => {
+    document.getElementById('disc-subtitle').textContent = 'Discovery Agent found 5 document classes in PROD_OS — 350,000 documents, 100 GB total';
+    document.getElementById('advisor-bubble').style.display = 'block';
+    document.getElementById('header-status').className = 'status-badge badge-idle';
+    document.getElementById('header-status').textContent = 'AWAITING';
+    updateAgentPanel('📊','Advisor Agent','Migration Strategy Analyst','badge-running','RUNNING',
+      `${tcFn('analyzeDocumentClasses')}${tcPunct('(')}\n  ${tcKey('classes')}: ${tcPunct('[...5 classes...]')},\n  ${tcKey('strategy')}: ${tcStr('throughput_optimal')}\n${tcPunct(')')}`,
+      `${tcPunct('{')}\n  ${tcKey('recommendation')}: ${tcStr('parallel_all')},\n  ${tcKey('firstClass')}: ${tcStr('LoanDocuments')},\n  ${tcKey('estimatedMinutes')}: ${tcNum('24')}\n${tcPunct('}')}`,
+      'Analysis complete. Recommending parallel processing of all 5 classes. LoanDocuments should be prioritized. Estimated 24 minutes at optimal throughput. Waiting for user confirmation.'
+    );
+    updateNAA('📊','Advisor Agent','analyzeClasses() → done','awaiting user confirm');
+  }, 400 + rows.length * 350 + 200);
 }
 
-// ── Intent router ─────────────────────────────────────────────
-async function route(text){
-  const t = text.toLowerCase();
-  if(t.includes('throughput')||t.includes('speed')||t.includes('performance'))
-    return { avatar:'📊', html: await resp_throughput() };
-  if(t.includes('fail')||t.includes('error')||(t.includes('how many')&&t.includes('job')))
-    return { avatar:'⚙️', html: await resp_failed() };
-  if((t.includes('create')||t.includes('make'))&&(t.includes('job')))
-    return { avatar:'⚙️', html: await resp_createJobs(parseInt(text.match(/\d+/)?.[0])||5) };
-  if((t.includes('create')||t.includes('new'))&&t.includes('repo'))
-    return { avatar:'🗂️', html: await resp_createRepo(text.match(/["']([^"']+)["']/)?.[1]||'IBM_CM_PROD_2') };
-  if(t.includes('time')||t.includes('eta')||t.includes('remain')||t.includes('complet')||t.includes('expect'))
-    return { avatar:'⏱️', html: await resp_eta() };
-  if(t.includes('db')||t.includes('database')||t.includes('table')||t.includes('sql')||t.includes('status'))
-    return { avatar:'🗄️', html: await resp_dbStatus() };
-  // Default
-  return { avatar:'🧠', html:`<p>I can answer questions by querying <strong>migration_db</strong> directly. Try:</p>
-    <div style="margin-top:.5rem;display:flex;flex-direction:column;gap:.25rem;font-size:.82rem">
-      <div>• <span style="color:var(--blue)">throughput / speed</span> — live performance metrics</div>
-      <div>• <span style="color:var(--yellow)">failed jobs / errors</span> — today's failure report</div>
-      <div>• <span style="color:var(--teal)">create 10 jobs</span> — insert into migration_jobs table</div>
-      <div>• <span style="color:var(--purple)">create new repository</span> — register in repositories table</div>
-      <div>• <span style="color:var(--pink)">expected time / ETA</span> — completion estimate</div>
-      <div>• <span style="color:var(--green)">DB status / table</span> — pg_stat health check</div>
-    </div>
-    <p style="margin-top:.6rem;color:var(--muted);font-size:.8rem">Use <strong>▶ Run Agent Flow</strong> in the sidebar to launch the full visual orchestration pipeline.</p>` };
+/* ═══════════════════════════════════════════════════════════════
+   STEP 4: Schema Mapping
+═══════════════════════════════════════════════════════════════ */
+function startStep4() {
+  document.querySelectorAll('.map-row').forEach(r => r.classList.remove('show'));
+  document.getElementById('map-advisor-bubble').style.display = 'none';
+  const summary = document.getElementById('map-summary');
+  summary.style.display = 'none';
+  document.getElementById('header-status').className = 'status-badge badge-running';
+  document.getElementById('header-status').textContent = 'RUNNING';
+
+  updateAgentPanel('🗺️','Schema Mapper Agent','Attribute Mapping Specialist','badge-running','RUNNING',
+    `${tcFn('getAttributeDefinitions')}${tcPunct('(')}\n  ${tcKey('className')}: ${tcStr('LoanDocuments')},\n  ${tcKey('objectStore')}: ${tcStr('PROD_OS')}\n${tcPunct(')')}`,
+    tcDim('// fetching schema...'),
+    'Retrieving attribute definitions from FileNet P8 source schema. Will compare against S3 metadata key conventions and auto-map where possible.'
+  );
+  updateNAA('🗺️','Schema Mapper','getAttributeDefinitions()','auto-mapping attrs...');
+  addMiniLog('MAP','Schema mapping started','#0d9488');
+
+  const mapRows = ['mr-1','mr-2','mr-3','mr-4','mr-5','mr-6','mr-7','mr-8'];
+  mapRows.forEach((id, i) => {
+    setTimeout(() => {
+      document.getElementById(id).classList.add('show');
+      if (i === 3) {
+        updateAgentPanel('🗺️','Schema Mapper Agent','Attribute Mapping Specialist','badge-running','RUNNING',
+          `${tcFn('mapAttributes')}${tcPunct('(')}\n  ${tcKey('source')}: ${tcStr('doc_class')},\n  ${tcKey('target')}: ${tcStr('category')},\n  ${tcKey('strategy')}: ${tcStr('semantic_match')}\n${tcPunct(')')}`,
+          `${tcPunct('{')}\n  ${tcKey('confidence')}: ${tcNum('0.95')},\n  ${tcKey('method')}: ${tcStr('semantic')},\n  ${tcKey('status')}: ${tcStr('mapped')}\n${tcPunct('}')}`,
+          'Mapping doc_class to category with 95% confidence via semantic matching. Standard class names align well with S3 category conventions.'
+        );
+        addMiniLog('MAP','doc_class → category (95%)','#0d9488');
+      }
+      if (i === 7) {
+        setTimeout(() => {
+          summary.style.display = 'block';
+          document.getElementById('map-advisor-bubble').style.display = 'block';
+          document.getElementById('header-status').className = 'status-badge badge-idle';
+          document.getElementById('header-status').textContent = 'AWAITING';
+          updateAgentPanel('🗺️','Schema Mapper Agent','Attribute Mapping Specialist','badge-done','DONE',
+            `${tcFn('validateMapping')}${tcPunct('(')}\n  ${tcKey('mappings')}: ${tcNum('8')},\n  ${tcKey('threshold')}: ${tcNum('0.85')}\n${tcPunct(')')}`,
+            `${tcPunct('{')}\n  ${tcKey('valid')}: ${tcBool('true')},\n  ${tcKey('avgConfidence')}: ${tcNum('0.979')},\n  ${tcKey('autoMapped')}: ${tcNum('8')},\n  ${tcKey('manual')}: ${tcNum('0')}\n${tcPunct('}')}`,
+            'All 8 attributes mapped with 97.9% average confidence. No manual intervention needed. Ready to start migration.'
+          );
+          addMiniLog('MAP','All 8 attrs mapped — 97.9% avg','#16a34a');
+          updateNAA('🗺️','Schema Mapper','validateMapping() → PASS','awaiting user confirm');
+        }, 400);
+      }
+    }, 500 + i * 450);
+  });
 }
 
-// ── Main send ─────────────────────────────────────────────────
-async function doSend(){
-  if(busy) return;
-  const inp = document.getElementById('pinput');
-  const text = inp.value.trim(); if(!text) return;
-  busy = true;
-  document.getElementById('sbtn').disabled = true;
-  inp.value = ''; resize(inp);
-  document.getElementById('fprow').style.display = 'none';
-  addUser(text);
-  showTyping();
-  await D(600);
-  const r = await route(text);
-  addAgent(r.avatar, r.html);
-  busy = false;
-  document.getElementById('sbtn').disabled = false;
-}
-
-// ══════════════════════════════════════════════════════════════
-// AGENT FLOW MODAL ENGINE
-// ══════════════════════════════════════════════════════════════
-
-const AGENTS = [
-  {id:'orchestrator', name:'Orchestrator', icon:'🧠', color:'rgba(167,139,250,.7)'},
-  {id:'discovery',    name:'Discovery',    icon:'🔍', color:'rgba(20,184,166,.7)'},
-  {id:'mapper',       name:'Mapper',       icon:'🗺️', color:'rgba(139,92,246,.7)'},
-  {id:'tuning',       name:'Tuner',        icon:'⚡', color:'rgba(245,158,11,.7)'},
-  {id:'provisioner',  name:'Provisioner',  icon:'🚀', color:'rgba(59,130,246,.7)'},
-  {id:'watchdog',     name:'Watchdog',     icon:'🛡️', color:'rgba(239,68,68,.7)'},
-  {id:'reporter',     name:'Reporter',     icon:'✉️', color:'rgba(16,185,129,.7)'},
-  {id:'db',           name:'DB Agent',     icon:'🗄️', color:'rgba(138,180,248,.7)'},
+/* ═══════════════════════════════════════════════════════════════
+   STEP 5: Migration
+═══════════════════════════════════════════════════════════════ */
+const AGENTS = ['supervisor','planner','tuner','extractor','transformer','loader','validator','error','checksum','reporter'];
+const TUNING_STEPS = [
+  { batch: 50000,  threads: 4,  tput: 1820, label: 'B50k/T4'  },
+  { batch: 75000,  threads: 6,  tput: 2640, label: 'B75k/T6'  },
+  { batch: 100000, threads: 8,  tput: 3450, label: 'B100k/T8' },
+  { batch: 125000, threads: 10, tput: 4100, label: 'B125k/T10'},
+  { batch: 150000, threads: 12, tput: 4380, label: 'B150k/T12'},
+  { batch: 175000, threads: 14, tput: 4410, label: 'B175k/T14'}
 ];
+const OPTIMAL_IDX = 4; // B150k/T12
 
-function setPill(id, state){
-  const el = document.getElementById(`pill-${id}`);
-  if(!el) return;
-  el.className = `agent-pill ${state}`;
+function setAgentState(name, state) {
+  const card = document.getElementById('amc-' + name);
+  const statusEl = document.getElementById('amc-s-' + name);
+  if (!card || !statusEl) return;
+  card.classList.remove('running','done','error');
+  statusEl.className = 'amc-status';
+  if (state === 'RUNNING') {
+    card.classList.add('running');
+    statusEl.classList.add('amc-running');
+    statusEl.textContent = 'RUNNING';
+  } else if (state === 'DONE') {
+    card.classList.add('done');
+    statusEl.classList.add('amc-done');
+    statusEl.textContent = 'DONE';
+  } else if (state === 'ERROR') {
+    card.classList.add('error');
+    statusEl.classList.add('amc-error');
+    statusEl.textContent = 'ERROR';
+  } else {
+    statusEl.classList.add('amc-idle');
+    statusEl.textContent = 'IDLE';
+  }
 }
 
-function activateNode(id, ms=4000){
-  const n = document.getElementById(`gn-${id}`);
-  const e = document.getElementById(`ge-${id}`);
-  const ag = AGENTS.find(a=>a.id===id);
-  if(n) n.classList.add('active');
-  if(e){ e.classList.add('active'); e.style.stroke = ag?.color||'rgba(167,139,250,.7)'; }
-  setTimeout(()=>{
-    if(n) n.classList.remove('active');
-    if(e){ e.classList.remove('active'); e.style.stroke=''; }
-  }, ms);
-}
-
-function addLog(agentId, type, message){
-  const ag = AGENTS.find(a=>a.id===agentId)||{name:'System',icon:'⬡',color:'var(--muted)'};
-  const typeLabels = { thought:'💭 Thought', action:'⚡ Action', obs:'👁 Observation', alert:'🚨 Alert', system:'ℹ System', success:'✔ Success' };
+function addEvent(type, msg) {
+  const feed = document.getElementById('ef-scroll');
   const el = document.createElement('div');
-  el.className = `le le-${type}`;
-  el.innerHTML = `
-    <div class="le-top">
-      <span class="le-agent" style="color:${ag.color||'var(--muted)'}">${ag.icon} ${ag.name}</span>
-      <span class="le-type">${typeLabels[type]||type}</span>
-      <span class="le-ts">${ts()}</span>
+  el.className = 'ef-entry';
+  const typeClasses = { INFO:'ef-info', OK:'ef-ok', WARN:'ef-warn', HEAL:'ef-heal', DONE:'ef-done' };
+  el.innerHTML = `<span class="ef-ts">${now()}</span><span class="ef-type ${typeClasses[type]||'ef-info'}">${type}</span><span class="ef-msg">${msg}</span>`;
+  feed.appendChild(el);
+  if (feed.children.length > 50) feed.removeChild(feed.firstChild);
+  requestAnimationFrame(() => el.classList.add('show'));
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function fmtNum(n) {
+  return Math.floor(n).toLocaleString();
+}
+
+function updateMetrics() {
+  document.getElementById('m-tput').textContent = fmtNum(migState.throughput);
+  document.getElementById('m-migrated').textContent = fmtNum(migState.migrated);
+  document.getElementById('m-remaining').textContent = fmtNum(TOTAL_DOCS - migState.migrated);
+  document.getElementById('m-errors').textContent = migState.errors;
+  document.getElementById('m-healed').textContent = migState.healed;
+  const eta = migState.throughput > 0 ? Math.ceil((TOTAL_DOCS - migState.migrated) / migState.throughput / 60) : null;
+  document.getElementById('m-eta').textContent = eta !== null ? eta + 'm' : '—';
+  document.getElementById('cp-batch').textContent = fmtNum(migState.batchSize);
+  document.getElementById('cp-threads').textContent = migState.threads;
+}
+
+function updateClassProgress() {
+  const classes = ['LoanDocuments','InvoiceRecords','Contracts','PolicyDocuments','AuditLogs'];
+  const pbIds = ['pb-loan','pb-invoice','pb-contracts','pb-policy','pb-audit'];
+  const pcIds = ['pc-loan','pc-invoice','pc-contracts','pc-policy','pc-audit'];
+
+  classes.forEach((cls, i) => {
+    const pct = Math.min(100, (classProgress[cls] / classTotals[cls]) * 100);
+    document.getElementById(pbIds[i]).style.width = pct + '%';
+    document.getElementById(pcIds[i]).textContent = fmtNum(classProgress[cls]) + ' / ' + fmtNum(classTotals[cls]);
+  });
+}
+
+/* Chart helpers */
+function tputToY(tput) {
+  // Map 0-5000 docs/s → 108 to 4 (SVG y is inverted)
+  const maxTput = 5000;
+  return 108 - (tput / maxTput) * 104;
+}
+function idxToX(idx, total) {
+  const left = 22, right = 695;
+  const step = (right - left) / (total - 1);
+  return left + idx * step;
+}
+function addChartPoint(idx, tput, label, total) {
+  const x = idxToX(idx, total);
+  const y = tputToY(tput);
+
+  // Update polyline
+  const line = document.getElementById('chart-line');
+  const fill = document.getElementById('chart-fill');
+  chartPoints.push({x, y});
+  const pts = chartPoints.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  line.setAttribute('points', pts);
+  // Fill polygon: line points + bottom right + bottom left
+  const fillPts = pts + ` ${x.toFixed(1)},108 ${idxToX(0,total).toFixed(1)},108`;
+  fill.setAttribute('points', fillPts);
+
+  // Add circle
+  const g = document.getElementById('chart-points');
+  const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circle.setAttribute('cx', x);
+  circle.setAttribute('cy', y);
+  circle.setAttribute('r', '4');
+  circle.setAttribute('fill', '#7c3aed');
+  circle.setAttribute('stroke', '#fff');
+  circle.setAttribute('stroke-width', '2');
+  g.appendChild(circle);
+
+  // Add label
+  const lg = document.getElementById('chart-labels');
+  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x', x);
+  txt.setAttribute('y', y - 10);
+  txt.setAttribute('text-anchor','middle');
+  txt.setAttribute('fill','#64748b');
+  txt.setAttribute('font-size','8');
+  txt.setAttribute('font-family','JetBrains Mono, monospace');
+  txt.textContent = label;
+  lg.appendChild(txt);
+
+  const tputTxt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  tputTxt.setAttribute('x', x);
+  tputTxt.setAttribute('y', y - 2);
+  tputTxt.setAttribute('text-anchor','middle');
+  tputTxt.setAttribute('fill','#0d9488');
+  tputTxt.setAttribute('font-size','7');
+  tputTxt.setAttribute('font-weight','bold');
+  tputTxt.setAttribute('font-family','JetBrains Mono, monospace');
+  tputTxt.textContent = (tput/1000).toFixed(2)+'k';
+  // Place it above label
+  tputTxt.setAttribute('y', y - 18);
+  lg.appendChild(tputTxt);
+}
+
+function showOptimalLine(tput, xFrom) {
+  const y = tputToY(tput);
+  const optLine = document.getElementById('optimal-line');
+  const optLabel = document.getElementById('optimal-label');
+  optLine.setAttribute('y1', y);
+  optLine.setAttribute('y2', y);
+  optLine.setAttribute('x1', xFrom);
+  optLine.setAttribute('opacity','1');
+  optLabel.setAttribute('y', y - 3);
+  optLabel.setAttribute('opacity','1');
+}
+
+/* Main migration simulation */
+function startStep5() {
+  migTimers.forEach(t => clearTimeout(t));
+  migTimers = [];
+  chartPoints = [];
+
+  // Clear chart
+  document.getElementById('chart-line').setAttribute('points','');
+  document.getElementById('chart-fill').setAttribute('points','');
+  document.getElementById('chart-points').innerHTML = '';
+  document.getElementById('chart-labels').innerHTML = '';
+  document.getElementById('optimal-line').setAttribute('opacity','0');
+  document.getElementById('optimal-label').setAttribute('opacity','0');
+
+  // Reset event feed
+  document.getElementById('ef-scroll').innerHTML = '';
+
+  // Reset metrics
+  migState = { progress:0, migrated:0, throughput:0, batchSize:50000, threads:4, errors:0, healed:0, eta:0 };
+  classProgress = { LoanDocuments:0, InvoiceRecords:0, Contracts:0, PolicyDocuments:0, AuditLogs:0 };
+  updateMetrics();
+  updateClassProgress();
+
+  // Reset agent states
+  AGENTS.forEach(a => setAgentState(a,'IDLE'));
+
+  document.getElementById('header-status').className = 'status-badge badge-running';
+  document.getElementById('header-status').textContent = 'RUNNING';
+  document.getElementById('mig-subtitle').textContent = 'Phase A: Job Planning — Creating migration jobs...';
+  document.getElementById('autotune-badge').style.display = 'none';
+
+  const T = (ms, fn) => { const id = setTimeout(fn, ms); migTimers.push(id); return id; };
+
+  let elapsed = 0;
+
+  /* ─── Phase A: Job Planning ─── */
+  setAgentState('supervisor','RUNNING');
+  setAgentState('planner','RUNNING');
+
+  updateAgentPanel('📋','Job Planner Agent','Migration Job Orchestrator','badge-running','RUNNING',
+    `${tcFn('createJob')}${tcPunct('(')}\n  ${tcKey('type')}: ${tcStr('extract')},\n  ${tcKey('class')}: ${tcStr('LoanDocuments')},\n  ${tcKey('batch')}: ${tcNum('50000')}\n${tcPunct(')')}`,
+    tcDim('// creating jobs...'),
+    'Creating 5 parallel migration jobs — one per document class. Each job will be independently managed and checkpointed.'
+  );
+  updateNAA('📋','Job Planner','createJob() × 5','initializing pipelines...');
+  addMiniLog('PLN','Job Planner: creating 5 jobs','#1a56d6');
+
+  const jobClasses = ['LoanDocuments','InvoiceRecords','Contracts','PolicyDocuments','AuditLogs'];
+  jobClasses.forEach((cls, i) => {
+    T(300 + i*400, () => {
+      addEvent('INFO', `Job J00${i+1} created for ${cls} (batch=50k)`);
+      updateAgentPanel('📋','Job Planner Agent','Migration Job Orchestrator','badge-running','RUNNING',
+        `${tcFn('createJob')}${tcPunct('(')}\n  ${tcKey('type')}: ${tcStr('extract')},\n  ${tcKey('class')}: ${tcStr(cls)},\n  ${tcKey('jobId')}: ${tcStr('J00'+(i+1))}\n${tcPunct(')')}`,
+        `${tcPunct('{')}\n  ${tcKey('jobId')}: ${tcStr('J00'+(i+1))},\n  ${tcKey('status')}: ${tcStr('CREATED')},\n  ${tcKey('checkpoint')}: ${tcStr('CHKPT-0000')}\n${tcPunct('}')}`,
+        null
+      );
+    });
+  });
+
+  elapsed = 300 + jobClasses.length * 400 + 300;
+  T(elapsed, () => {
+    setAgentState('planner','DONE');
+    addEvent('OK', 'All 5 jobs created. Starting Performance Tuner...');
+    document.getElementById('mig-subtitle').textContent = 'Phase B: Auto-tuning throughput configuration...';
+    document.getElementById('autotune-badge').style.display = 'inline';
+    addMiniLog('PLN','5 jobs created — handing off','#16a34a');
+  });
+
+  /* ─── Phase B: Auto-tuning ─── */
+  elapsed += 500;
+  setAgentState('tuner','RUNNING');
+  setAgentState('extractor','RUNNING');
+
+  const TUNE_INTERVAL = 1400; // ms per tuning step
+
+  TUNING_STEPS.forEach((step, i) => {
+    T(elapsed + i * TUNE_INTERVAL, () => {
+      migState.batchSize = step.batch;
+      migState.threads = step.threads;
+      migState.throughput = step.tput;
+      updateMetrics();
+      addChartPoint(i, step.tput, step.label, TUNING_STEPS.length);
+
+      const isOptimal = (i === OPTIMAL_IDX);
+
+      updateAgentPanel('⚡','Performance Tuner','Auto-scaling Optimizer','badge-running','RUNNING',
+        `${tcFn('setConfig')}${tcPunct('(')}\n  ${tcKey('batch')}: ${tcNum(step.batch)},\n  ${tcKey('threads')}: ${tcNum(step.threads)}\n${tcPunct(')')}`,
+        `${tcPunct('{')}\n  ${tcKey('throughput')}: ${tcNum(step.tput)},\n  ${tcKey('efficiency')}: ${tcNum( (step.tput/5000*100).toFixed(1) )}${tcDim('%')}\n${tcPunct('}')}`,
+        isOptimal
+          ? `Optimal configuration found: batch=${step.batch.toLocaleString()}, threads=${step.threads}. Throughput locked at ${step.tput.toLocaleString()}/s.`
+          : `Testing config ${step.label}: ${step.tput.toLocaleString()} docs/s. ${i < OPTIMAL_IDX ? 'Increasing...' : 'Marginal gain. Plateau detected.'}`
+      );
+
+      document.getElementById('cp-status').textContent = isOptimal ? 'OPTIMAL' : 'TUNING';
+      document.getElementById('cp-phase').textContent = `B: ${step.label}`;
+
+      if (isOptimal) {
+        const optX = idxToX(OPTIMAL_IDX, TUNING_STEPS.length);
+        showOptimalLine(step.tput, optX);
+        addEvent('OK', `OPTIMAL LOCKED: ${step.tput.toLocaleString()}/s at ${step.label}`);
+        addMiniLog('TUN','OPTIMAL LOCKED B150k/T12 4380/s','#16a34a');
+      } else if (i === TUNING_STEPS.length - 1) {
+        addEvent('INFO', `Marginal gain at ${step.label}. Rolling back to optimal B150k/T12.`);
+        // Rollback to optimal
+        setTimeout(() => {
+          migState.batchSize = TUNING_STEPS[OPTIMAL_IDX].batch;
+          migState.threads = TUNING_STEPS[OPTIMAL_IDX].threads;
+          updateMetrics();
+          document.getElementById('cp-status').textContent = 'RUNNING';
+        }, 600);
+      } else {
+        addEvent('INFO', `Config ${step.label}: ${step.tput.toLocaleString()} docs/s — increasing`);
+      }
+    });
+  });
+
+  elapsed += TUNING_STEPS.length * TUNE_INTERVAL + 800;
+
+  /* ─── Phase C: Main Migration ─── */
+  T(elapsed, () => {
+    document.getElementById('mig-subtitle').textContent = 'Phase C: Main Migration — Parallel processing all 5 document classes...';
+    document.getElementById('autotune-badge').style.display = 'none';
+    setAgentState('tuner','DONE');
+    setAgentState('transformer','RUNNING');
+    setAgentState('loader','RUNNING');
+    setAgentState('validator','RUNNING');
+    setAgentState('checksum','RUNNING');
+    document.getElementById('cp-status').textContent = 'MIGRATING';
+    document.getElementById('cp-phase').textContent = 'C: Main Run';
+
+    updateAgentPanel('🚀','Migration Supervisor','Main Migration Orchestrator','badge-running','RUNNING',
+      `${tcFn('getJobStatus')}${tcPunct('(')}\n  ${tcKey('jobIds')}: ${tcPunct('[')}"J001","J002","J003","J004","J005"${tcPunct(']')}\n${tcPunct(')')}`,
+      `${tcPunct('{')}\n  ${tcKey('running')}: ${tcNum('5')},\n  ${tcKey('throughput')}: ${tcNum('4380')},\n  ${tcKey('eta')}: ${tcStr('22min')}\n${tcPunct('}')}`,
+      'Main migration running. All 5 jobs active in parallel. Performance Tuner has locked optimal configuration. Monitoring for errors.'
+    );
+    updateNAA('🚀','Supervisor','getJobStatus() all 5 jobs','processing 4380 docs/s...');
+    addMiniLog('SUP','Main migration phase started','#7c3aed');
+    addEvent('INFO', 'All 5 jobs running at optimal config B150k/T12');
+
+    /* Progress animation — runs over ~35 seconds */
+    const totalDuration = 35000;
+    const updateInterval = 400;
+    const steps = totalDuration / updateInterval;
+    const classKeys = Object.keys(classProgress);
+    let step = 0;
+    let errorFired = false;
+
+    const progInterval = setInterval(() => {
+      step++;
+      const pct = Math.min(1, step / steps);
+
+      // Animate class progress unevenly (different speeds)
+      const speeds = [1.0, 0.95, 0.9, 0.85, 0.8];
+      classKeys.forEach((cls, i) => {
+        const clsPct = Math.min(1, pct * speeds[i] + (pct > 0.5 ? (pct-0.5)*speeds[i]*0.1 : 0));
+        classProgress[cls] = Math.floor(classTotals[cls] * clsPct);
+      });
+
+      migState.migrated = Object.values(classProgress).reduce((a,b) => a+b, 0);
+      migState.throughput = 4380 + Math.sin(step * 0.15) * 120;
+      updateMetrics();
+      updateClassProgress();
+
+      // Fire error at ~45%
+      if (pct >= 0.45 && !errorFired) {
+        errorFired = true;
+        migState.errors = 1;
+        updateMetrics();
+        setAgentState('error','RUNNING');
+        addEvent('WARN', 'Error in J002 (InvoiceRecords): DEADLOCK_001 detected');
+        addMiniLog('ERR','DEADLOCK on J002 InvoiceRecords','#dc2626');
+
+        updateAgentPanel('🔧','Error Resolver Agent','Auto-Healing Specialist','badge-running','RUNNING',
+          `${tcFn('analyzeError')}${tcPunct('(')}\n  ${tcKey('jobId')}: ${tcStr('J002')},\n  ${tcKey('errorCode')}: ${tcStr('DEADLOCK_001')}\n${tcPunct(')')}`,
+          `${tcPunct('{')}\n  ${tcKey('cause')}: ${tcStr('row_lock_timeout')},\n  ${tcKey('action')}: ${tcStr('retry_from_checkpoint')}\n${tcPunct('}')}`,
+          'Deadlock detected in J002. Analyzing error pattern. Will retry from last checkpoint with reduced concurrency.'
+        );
+
+        setTimeout(() => {
+          addEvent('HEAL', 'Retrying J002 from checkpoint CHKPT-1845...');
+          updateAgentPanel('🔧','Error Resolver Agent','Auto-Healing Specialist','badge-running','RUNNING',
+            `${tcFn('retryJob')}${tcPunct('(')}\n  ${tcKey('jobId')}: ${tcStr('J002')},\n  ${tcKey('checkpoint')}: ${tcStr('CHKPT-1845')},\n  ${tcKey('concurrency')}: ${tcNum('8')}\n${tcPunct(')')}`,
+            `${tcPunct('{')}\n  ${tcKey('status')}: ${tcStr('RETRYING')},\n  ${tcKey('progress')}: ${tcNum('45')}${tcDim('%')}\n${tcPunct('}')}`,
+            null
+          );
+        }, 1200);
+
+        setTimeout(() => {
+          migState.healed = 1;
+          updateMetrics();
+          setAgentState('error','DONE');
+          addEvent('OK', 'J002 recovered. Resuming at checkpoint CHKPT-1845');
+          addMiniLog('ERR','J002 auto-healed from checkpoint','#d97706');
+          updateAgentPanel('🚀','Migration Supervisor','Main Migration Orchestrator','badge-running','RUNNING',
+            `${tcFn('getJobStatus')}${tcPunct('(')}\n  ${tcKey('jobIds')}: ${tcPunct('[')}"J001"..."J005"${tcPunct(']')}\n${tcPunct(')')}`,
+            `${tcPunct('{')}\n  ${tcKey('running')}: ${tcNum('5')},\n  ${tcKey('healed')}: ${tcNum('1')},\n  ${tcKey('errors')}: ${tcNum('0')}\n${tcPunct('}')}`,
+            null
+          );
+        }, 3000);
+      }
+
+      // Periodic events
+      if (step % 15 === 0 && pct < 0.95) {
+        const eventTypes = [
+          ['INFO', `Checkpointing J001: ${fmtNum(classProgress.LoanDocuments)} docs verified`],
+          ['INFO', `Transformer processed ${fmtNum(migState.migrated)} attrs mapped`],
+          ['OK', `SHA-256 checksums verified for batch ${Math.floor(step/15)*150}k`],
+          ['INFO', `Loader: ${fmtNum(migState.migrated)} objects in S3 rp-migration/`],
+        ];
+        const ev = eventTypes[Math.floor(step/15) % eventTypes.length];
+        addEvent(ev[0], ev[1]);
+      }
+      if (step % 25 === 0 && pct < 0.95) {
+        const msgs = [
+          ['SUP','getJobStatus(): 5/5 running','#7c3aed'],
+          ['VAL','SHA-256 batch verified OK','#16a34a'],
+          ['LOD','S3 PutObject batches OK','#0d9488'],
+        ];
+        const m = msgs[Math.floor(step/25) % msgs.length];
+        addMiniLog(m[0],m[1],m[2]);
+      }
+
+      // End condition
+      if (pct >= 1) {
+        clearInterval(progInterval);
+        // Set all complete
+        classKeys.forEach(cls => { classProgress[cls] = classTotals[cls]; });
+        migState.migrated = TOTAL_DOCS;
+        migState.throughput = 4380;
+        updateMetrics();
+        updateClassProgress();
+
+        AGENTS.forEach(a => setAgentState(a,'DONE'));
+        addEvent('DONE', 'All 5 document classes migrated successfully!');
+        addEvent('DONE', 'SHA-256 checksums verified: 350,000/350,000');
+        addMiniLog('SUP','Migration COMPLETE — 350,000 docs','#16a34a');
+        document.getElementById('mig-subtitle').textContent = 'Migration Complete — 350,000 documents migrated successfully';
+        document.getElementById('header-status').className = 'status-badge badge-done';
+        document.getElementById('header-status').textContent = 'COMPLETE';
+        document.getElementById('cp-status').textContent = 'DONE';
+        document.getElementById('cp-phase').textContent = 'D: Complete';
+
+        updateAgentPanel('📊','Reporter Agent','Reconciliation Specialist','badge-running','RUNNING',
+          `${tcFn('generateReport')}${tcPunct('(')}\n  ${tcKey('sessionId')}: ${tcStr('MIG-20260528-001')},\n  ${tcKey('includeChecksums')}: ${tcBool('true')}\n${tcPunct(')')}`,
+          `${tcPunct('{')}\n  ${tcKey('status')}: ${tcStr('SUCCESS')},\n  ${tcKey('total')}: ${tcNum('350000')},\n  ${tcKey('delta')}: ${tcNum('0')}\n${tcPunct('}')}`,
+          'Migration complete. All 350,000 documents verified. Generating reconciliation report with SHA-256 checksums. Advancing to reconciliation screen.'
+        );
+
+        const advId = setTimeout(() => {
+          goToStep(6);
+        }, 3000);
+        migTimers.push(advId);
+      }
+    }, updateInterval);
+
+    migTimers.push(progInterval);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STEP 6: Reconciliation
+═══════════════════════════════════════════════════════════════ */
+function startStep6() {
+  document.getElementById('header-status').className = 'status-badge badge-done';
+  document.getElementById('header-status').textContent = 'DONE';
+  setAgentState && AGENTS.forEach(a => setAgentState(a,'DONE'));
+
+  updateAgentPanel('📊','Reporter Agent','Reconciliation Specialist','badge-done','DONE',
+    `${tcFn('getSourceCount')}${tcPunct('(')}\n  ${tcKey('objectStore')}: ${tcStr('PROD_OS')},\n  ${tcKey('class')}: ${tcStr('LoanDocuments')}\n${tcPunct(')')}`,
+    `${tcPunct('{')}\n  ${tcKey('count')}: ${tcNum('125000')},\n  ${tcKey('targetCount')}: ${tcNum('125000')},\n  ${tcKey('delta')}: ${tcNum('0')}\n${tcPunct('}')}`,
+    'Reconciliation complete. All 350,000 documents verified across source and target. SHA-256 checksums match 100%. Migration session MIG-20260528-001 successful.'
+  );
+  updateNAA('📊','Reporter Agent','generateReport() → done','session report ready');
+  addMiniLog('REP','Reconciliation report generated','#0d9488');
+  addMiniLog('REP','350,000/350,000 — delta: 0','#16a34a');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+/* ─── EMAIL MODAL CONTROLS ───────────────────────────────────── */
+function openEmailReport() {
+  generateClientEmail();
+  document.getElementById('report-modal').classList.add('open');
+}
+
+function closeEmailReport() {
+  document.getElementById('report-modal').classList.remove('open');
+}
+
+function simulateEmailSend() {
+  alert("Report emailed successfully to Client Operations and Stakeholders! Checksum logs attached.");
+  closeEmailReport();
+}
+
+function copyEmailHTML() {
+  const emailContent = document.getElementById("email-body-content").innerHTML;
+  navigator.clipboard.writeText(emailContent).then(() => {
+    alert("Email HTML copied to clipboard! You can paste this directly into any HTML email editor.");
+  }).catch(err => {
+    console.error("Failed to copy clipboard: ", err);
+  });
+}
+
+function openInMailClient() {
+  const dStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const subject = encodeURIComponent(`RapidPro Daily Migration Status - ${dStr}`);
+  const bodyText = encodeURIComponent(
+    `Dear Client Operations Team,\n\n` +
+    `This is an automated status report generated by the Rapidpro Agentic AI Orchestrator.\n\n` +
+    `MIGRATION SUMMARY:\n` +
+    `- Source System: IBM FileNet P8 Repository\n` +
+    `- Target Endpoint: Amazon S3 (rp-migration)\n` +
+    `- Peak Speed: 4,380 docs/sec\n` +
+    `- Status: 100% Complete (350,000 / 350,000 docs)\n` +
+    `- Errors: 0 outstanding (1 low-storage warning resolved)\n` +
+    `- Data Integrity: 100% Verified (SHA-256 matches)\n\n` +
+    `The worker VM assets have been successfully scaled down to optimize network and compute budgets.\n\n` +
+    `Best Regards,\n` +
+    `Rapidpro AI Operations Agent`
+  );
+  window.location.href = `mailto:client-ops@rapidpro.com?subject=${subject}&body=${bodyText}`;
+}
+
+function generateClientEmail() {
+  const dateStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const emailContent = `
+    <div style="font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; color: #1e293b; max-width: 550px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+      <h2 style="color: #1a56d6; margin-top: 0; font-size: 18px; border-bottom: 2px solid #eff6ff; padding-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span>✦</span> AutoMigrate AI — Daily Migration Summary
+      </h2>
+      <p style="font-size: 13px; line-height: 1.5; color: #475569;">
+        Dear Client Operations Team,
+      </p>
+      <p style="font-size: 13px; line-height: 1.5; color: #475569;">
+        Here is the daily automated reconciliation report compiled by the <strong>Autonomous Migration Agents</strong> for the session <strong>MIG-20260528-001</strong>. All active workers successfully closed their pipelines and validated checksum structures.
+      </p>
+      
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin: 18px 0;">
+        <h4 style="margin: 0 0 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Execution Parameters</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Source System:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right;">IBM FileNet P8 Repository</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Target Endpoint:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right;">Amazon S3 (rp-migration)</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Tuned Batch Size:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right;">150,000 / Batch</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Tuned Thread Pool:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right;">12 Threads / VM</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Peak Network Speed:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #16a34a;">4,380 docs/sec</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Total Migrated:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #16a34a;">350,000 / 350,000 docs (100%)</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Errors Encounted:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #dc2626;">1 Low Storage Warning</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Self-Healed Resolves:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #7c3aed;">1 Purge cache (Wipe complete)</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 12px; margin-bottom: 18px;">
+        <span style="font-weight: 700; color: #065f46; font-size: 12.5px;">✓ Storage Self-Healing Verification</span>
+        <p style="margin: 4px 0 0; font-size: 11.5px; color: #065f46; line-height: 1.4;">
+          Storage Monitor Agent successfully captured disk capacity limit on VM-3 (<10GB free). Extractor automatically paused, Ingester concluded upload, and <code>Migration_Complete</code> cache folder was purged, freeing 52 GB without operational interruption.
+        </p>
+      </div>
+
+      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 15px 0 0; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+        Sent automatically by AutoMigrate AI Agent Framework
+      </p>
     </div>
-    <div class="le-msg">${esc(message)}</div>`;
-  document.getElementById('flow-log').appendChild(el);
-  scrollLog();
+  `;
+  document.getElementById('email-body-content').innerHTML = emailContent;
 }
 
-function setFlowProgress(pct, label){
-  document.getElementById('flow-pb').style.width = pct+'%';
-  document.getElementById('flow-prog-pct').textContent = pct+'%';
-  document.getElementById('flow-prog-label').textContent = label;
-}
-
-function resetFlowUI(){
-  document.getElementById('flow-log').innerHTML='<div class="le le-system"><div class="le-top"><span class="le-agent" style="color:var(--muted)">⬡ SYSTEM</span><span class="le-type">info</span></div><div class="le-msg">Flow reset. Press ▶ Start Flow to begin.</div></div>';
-  AGENTS.forEach(a=>{ setPill(a.id,''); });
-  document.querySelectorAll('.ge').forEach(e=>{ e.classList.remove('active'); e.style.stroke=''; });
-  document.querySelectorAll('.gn').forEach(n=>{ n.classList.remove('active'); });
-  setFlowProgress(0,'Ready — press Start Flow');
-}
-
-async function startAgentFlow(){
-  if(flowRunning) return;
-  flowRunning = true;
-  const btn = document.getElementById('modal-run-btn');
-  btn.disabled = true; btn.textContent = '⟳ Running…';
-
-  // Clear log
-  document.getElementById('flow-log').innerHTML='';
-
-  // Phase 0 - Orchestrator
-  setPill('orchestrator','planning');
-  activateNode('orchestrator',20000);
-  setFlowProgress(5,'Phase 1/6 — Orchestrator Planning');
-  addLog('orchestrator','system','Rapidpro Agent Flow started. Decomposing migration goal into 6 pipeline stages.');
-  await D(800);
-  addLog('orchestrator','thought','Scanning prompt. Source: IBM CM · Target: AWS S3 · Items: 350,000. Building DAG execution plan.');
-  await D(1000);
-  setPill('orchestrator','executing');
-  addLog('orchestrator','action','Dispatching to specialized agents via MCP gateway. Sequence: Discovery → Mapper → Tuner → Provisioner → Watchdog → Reporter.');
-  await D(800);
-
-  // Phase 1 - Discovery + DB
-  setFlowProgress(18,'Phase 2/6 — Schema Discovery');
-  setPill('discovery','planning'); setPill('db','planning');
-  activateNode('discovery',5000); activateNode('db',4000);
-  await D(700);
-  setPill('discovery','executing'); setPill('db','executing');
-  addLog('discovery','thought','Connecting to IBM CM source repository via discoverserver microservice.');
-  await D(800);
-  addLog('db','action','SQL: SELECT * FROM cm_document_classes WHERE active=true; → 6 classes returned.');
-  await D(700);
-  addLog('discovery','obs','Fetched 6 document classes, 350,000 total items. Connection latency: 14ms. Schema validated.');
-  setPill('discovery','completed'); setPill('db','completed');
-  await D(600);
-
-  // Phase 2 - Mapper
-  setFlowProgress(34,'Phase 3/6 — Attribute Mapping');
-  setPill('mapper','planning'); activateNode('mapper',5000);
-  await D(600);
-  setPill('mapper','executing');
-  addLog('mapper','thought','Comparing IBM CM source fields against AWS S3 target schema. Using LLM semantic alignment.');
-  await D(900);
-  addLog('mapper','action','Mapping: item_id→s3_object_key, creator_name→author, creation_date→migrated_at, document_class→doc_category, content_blob→storage_uri, retention_code→retention_period_yrs');
-  await D(700);
-  addLog('mapper','obs','100% coverage achieved. 6/6 fields mapped. Config written to config-service via repo-mcp:3001.');
-  setPill('mapper','completed');
-
-  // Phase 3 - Tuner
-  setFlowProgress(50,'Phase 4/6 — Performance Tuning');
-  setPill('tuning','planning'); activateNode('tuning',5000);
-  await D(600);
-  setPill('tuning','executing');
-  addLog('tuning','thought','Querying migration_db for historical throughput benchmarks and target API limits.');
-  await D(800);
-  addLog('db','action','SQL: SELECT AVG(throughput), MAX(throughput) FROM job_metrics WHERE week=CURRENT_WEEK; → avg=3940, max=5820');
-  await D(700);
-  addLog('tuning','action','Auto-scaling: BatchSize 50,000 → 75,000. ThreadCount 4 → 8. Expected gain: +42% throughput.');
-  await D(600);
-  addLog('tuning','obs','Tuned parameters written to migrationsetservice config. Validated against S3 write limits (10k req/s). ✔');
-  setPill('tuning','completed');
-
-  // Phase 4 - Provisioner
-  setFlowProgress(65,'Phase 5/6 — VM Provisioning & Execution');
-  setPill('provisioner','planning'); activateNode('provisioner',6000);
-  await D(600);
-  setPill('provisioner','executing');
-  addLog('provisioner','thought','Provisioning 4 parallel Worker VMs in AWS us-east-1 subnet.');
-  await D(800);
-  addLog('provisioner','action','Deploying Docker containers to VM-1, VM-2, VM-3, VM-4. Starting batch ingestion workers.');
-  await D(1000);
-  addLog('provisioner','obs','All 4 VMs online. Heartbeat confirmed. Batch pipeline running at 4,150 docs/sec.');
-  setPill('provisioner','completed');
-
-  // Phase 5 - Watchdog (with deadlock)
-  setFlowProgress(78,'Phase 5/6 — Watchdog Monitoring');
-  setPill('watchdog','planning'); activateNode('watchdog',10000);
-  await D(600);
-  setPill('watchdog','executing');
-  addLog('watchdog','thought','Attaching telemetry stream to all 4 VMs. Monitoring for row-level locks, OOM, and network timeouts.');
-  await D(1200);
-  addLog('watchdog','alert','CRITICAL: Row-level deadlock on VM-3 at chunk #1845. Transaction lock blocking ingestion. Throughput dropped 75%.');
-  setPill('watchdog','error');
-  await D(1000);
-  addLog('watchdog','action','Self-healing protocol: (1) Pause chunk #1845 ingestion. (2) Rollback to last checkpoint. (3) Hot-reboot VM-3 container.');
-  await D(1500);
-  addLog('watchdog','obs','VM-3 recovered in 15 seconds. Zero data loss. Ingestion resumed. All VMs active. Throughput restored.');
-  setPill('watchdog','completed');
-
-  // Phase 6 - Reporter
-  setFlowProgress(92,'Phase 6/6 — Client Report Generation');
-  setPill('reporter','planning'); activateNode('reporter',5000);
-  await D(600);
-  setPill('reporter','executing');
-  addLog('reporter','thought','Compiling final migration statistics from migration_db for daily client digest.');
-  await D(800);
-  addLog('db','action','SQL: SELECT SUM(migrated), AVG(throughput), COUNT(*) FROM job_metrics WHERE run_date=CURRENT_DATE;');
-  await D(600);
-  addLog('reporter','action','Generating HTML email report: 350,000 docs migrated, 4,150 avg docs/sec, 1 deadlock auto-healed.');
-  await D(700);
-  addLog('reporter','obs','Email draft ready for client-ops@clientorg.com. Dispatching via reporter-mcp:3006 → gateway mailer.');
-  setPill('reporter','completed');
-
-  // Done
-  setFlowProgress(100,'✔ All 6 Phases Complete — 350,000 documents migrated');
-  setPill('orchestrator','completed');
-  addLog('orchestrator','success','Migration pipeline complete. All 7 agents finished. VMs de-provisioned. Client report sent. ✔');
-
-  btn.disabled = false;
-  btn.innerHTML = '↺ Run Again';
-  btn.onclick = ()=>{ resetFlowUI(); flowRunning=false; btn.innerHTML='▶ Start Flow'; btn.onclick=startAgentFlow; };
-  flowRunning = false;
-}
+startStep1();
 </script>
 </body>
 </html>

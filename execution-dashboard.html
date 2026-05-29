@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoMigrate AI — Autonomous Execution Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ─── RESET & BASE ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  background: #f0f4fb;
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+}
+:root {
+  --blue: #1a56d6;
+  --blue-dark: #1446b8;
+  --blue-light: #eff6ff;
+  --teal: #0d9488;
+  --green: #16a34a;
+  --red: #dc2626;
+  --amber: #d97706;
+  --violet: #7c3aed;
+  --bg: #f0f4fb;
+  --white: #ffffff;
+  --border: rgba(26,86,214,0.12);
+  --text: #0f172a;
+  --muted: #64748b;
+  --dim: #94a3b8;
+  --code-bg: #0f1629;
+}
+input, select, button { font-family: inherit; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ─── HEADER ──────────────────────────────────────────────────── */
+#header {
+  height: 55px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+  flex-shrink: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(26,86,214,0.06);
+}
+.logo-wrap { display: flex; align-items: center; gap: 9px; cursor: pointer; text-decoration: none; }
+.logo-gem {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a56d6 0%, #7c3aed 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 800;
+  box-shadow: 0 2px 8px rgba(26,86,214,0.35);
+  flex-shrink: 0;
+}
+.logo-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+.logo-name span { color: var(--blue); }
+
+.header-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.window-status-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.window-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.window-open { background: #dcfce7; color: #166534; animation: pulseGreen 1.6s infinite; }
+.window-closed { background: #fee2e2; color: #991b1b; }
+.window-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+.session-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: var(--muted);
+}
+.status-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-running { background: #dcfce7; color: var(--green); }
+.badge-idle { background: #f1f5f9; color: var(--muted); }
+.badge-paused { background: #fef3c7; color: var(--amber); animation: pulseOrange 1.4s infinite; }
+.badge-done { background: #d1fae5; color: #065f46; }
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0px rgba(22, 163, 74, 0.2); }
+  50% { box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1); }
+}
+@keyframes pulseOrange {
+  0%, 100% { box-shadow: 0 0 0 0px rgba(217, 119, 6, 0.2); }
+  50% { box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1); }
+}
+
+/* ─── APP BODY LAYOUT ─────────────────────────────────────────── */
+#app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─── LEFT PANEL: Agent Graph & Schedule (250px) ──────────────── */
+#left-panel {
+  width: 250px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.panel-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--dim);
+  margin-bottom: 12px;
+}
+
+/* Agent Nodes Graph CSS */
+.agent-flow-graph {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+.agent-node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #f8fafc;
+  transition: all 0.25s;
+}
+.agent-node.active {
+  background: var(--blue-light);
+  border-color: rgba(26,86,214,0.2);
+  box-shadow: 0 2px 6px rgba(26,86,214,0.06);
+}
+.agent-node.active .an-icon-wrap {
+  animation: pulseNode 1.4s ease-in-out infinite;
+}
+.an-icon-wrap {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.agent-node.active .an-icon-wrap {
+  background: var(--blue);
+  color: white;
+}
+.an-info { flex: 1; min-width: 0; }
+.an-name { font-size: 11.5px; font-weight: 600; color: var(--text); }
+.an-role { font-size: 9px; color: var(--muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.an-status {
+  font-size: 8px; font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.ans-idle { background: #e2e8f0; color: var(--muted); }
+.ans-active { background: #dcfce7; color: var(--green); }
+.ans-paused { background: #fee2e2; color: var(--red); }
+
+@keyframes pulseNode {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* Schedule Toggles */
+.schedule-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.schedule-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  background: var(--white);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.schedule-btn.active {
+  border-color: var(--blue);
+  background: var(--blue-light);
+  color: var(--blue);
+}
+.schedule-btn span.tag {
+  font-size: 8px;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: var(--muted);
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.schedule-btn.active span.tag {
+  background: var(--blue);
+  color: white;
+}
+.schedule-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+/* Sidebar Action Link */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: #f8fafc;
+}
+.back-wizard-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--blue);
+  border-radius: 6px;
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 11px;
+  transition: all 0.2s;
+}
+.back-wizard-btn:hover {
+  background: var(--blue-light);
+  border-style: solid;
+}
+
+/* ─── CENTER PANEL: Dashboard Grid (flex: 1) ─────────────────── */
+#center-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  margin-bottom: 2px;
+}
+.section-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 12px; }
+
+/* VM Grid Layout */
+.vm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.vm-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 6px rgba(26,86,214,0.04);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vm-card.active { border-color: rgba(26,86,214,0.25); box-shadow: 0 4px 12px rgba(26,86,214,0.06); }
+.vm-card.critical { border-color: var(--red); box-shadow: 0 4px 16px rgba(220,38,38,0.1); }
+.vm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.vm-identity { display: flex; align-items: center; gap: 8px; }
+.vm-indicator {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #cbd5e1;
+}
+.vm-card.active .vm-indicator { background: var(--green); animation: pulseGreen 1.4s infinite; }
+.vm-card.critical .vm-indicator { background: var(--red); animation: pulseRed 1s infinite; }
+.vm-card.paused .vm-indicator { background: var(--amber); animation: pulseOrange 1.4s infinite; }
+.vm-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.vm-ip { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--dim); }
+.vm-status-badge {
+  font-size: 8.5px; font-weight: 800;
+  padding: 2px 6px; border-radius: 4px;
+  text-transform: uppercase;
+}
+.vms-offline { background: #f1f5f9; color: var(--muted); }
+.vms-active { background: #dcfce7; color: #166534; }
+.vms-paused { background: #fee2e2; color: #991b1b; }
+.vms-cleaning { background: #e0f2fe; color: #0369a1; }
+
+@keyframes pulseRed {
+  0%, 100% { box-shadow: 0 0 0 0px rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.1); }
+}
+
+/* VM Storage Bar */
+.vm-storage-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vms-lbl-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.vms-bar-bg {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.vms-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 4px;
+  transition: width 0.4s ease, background 0.4s ease;
+}
+.vm-card.medium .vms-bar-fill {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+.vm-card.critical .vms-bar-fill {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+.vm-storage-alert {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--red);
+  display: none;
+}
+.vm-card.critical .vm-storage-alert { display: inline; }
+
+/* VM Pipeline CSS */
+.vm-pipeline {
+  height: 38px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  position: relative;
+  overflow: hidden;
+}
+.pipeline-node {
+  z-index: 2;
+  background: var(--white);
+  border: 1px solid #cbd5e1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.vm-card.active .pipeline-node.active {
+  border-color: var(--blue);
+  color: var(--blue);
+  box-shadow: 0 1px 4px rgba(26,86,214,0.1);
+}
+.pipeline-arrow {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  position: relative;
+  margin: 0 4px;
+}
+.vm-card.active .pipeline-arrow.active {
+  background: linear-gradient(90deg, var(--blue) 50%, #e2e8f0 50%);
+  background-size: 200% 100%;
+  animation: flowingLine 1s linear infinite;
+}
+@keyframes flowingLine {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+.vm-telemetry {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+  text-align: center;
+}
+.vmt-item { display: flex; flex-direction: column; }
+.vmt-val { font-size: 11px; font-weight: 700; color: var(--text); }
+.vmt-lbl { font-size: 8.5px; color: var(--dim); text-transform: uppercase; font-weight: 600; }
+
+/* Tuning Section */
+.tuning-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 6px rgba(26,86,214,0.04);
+}
+.tuning-chart-wrap {
+  position: relative;
+  margin-top: 10px;
+}
+#chart-svg {
+  width: 100%;
+  height: 120px;
+  overflow: visible;
+}
+
+/* Progress & Live Feed Section */
+.bottom-split {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 12px;
+  min-height: 0;
+  flex: 1;
+}
+.progress-panel, .feed-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 6px rgba(26,86,214,0.04);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.prog-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.prog-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.pr-name { font-weight: 600; color: var(--text); }
+.pr-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+.pr-bar-bg {
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pr-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--blue);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.live-feed-scroll {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lf-entry {
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.2s;
+}
+.lf-entry.show { opacity: 1; transform: translateY(0); }
+.lf-ts { color: var(--dim); margin-right: 6px; }
+.lf-type {
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-right: 6px;
+  text-transform: uppercase;
+  font-size: 8px;
+}
+.lf-t-info { background: #eff6ff; color: #1e40af; }
+.lf-t-ok { background: #ecfdf5; color: #047857; }
+.lf-t-warn { background: #fffbeb; color: #b45309; font-weight: 800; animation: blinkWarning 1.2s infinite; }
+.lf-t-heal { background: #faf5ff; color: #6b21a8; }
+.lf-t-done { background: #f0fdf4; color: #15803d; font-weight: 800; }
+
+@keyframes blinkWarning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ─── RIGHT PANEL: Console & Agent Reasoning (300px) ────────── */
+#right-panel {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.ap-card {
+  padding: 16px;
+  background: linear-gradient(180deg, var(--blue-light) 0%, var(--white) 100%);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.ap-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--violet) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  color: white;
+  box-shadow: 0 4px 10px rgba(26,86,214,0.15);
+  flex-shrink: 0;
+}
+.ap-meta { flex: 1; min-width: 0; }
+.ap-name { font-size: 13px; font-weight: 800; color: var(--text); }
+.ap-role { font-size: 10px; font-weight: 600; color: var(--muted); }
+
+.reasoning-bubble {
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  background: #eff6ff;
+  border-left: 3px solid var(--blue);
+}
+.rb-title {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--blue);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.rb-text { font-size: 11.5px; color: #1e40af; line-height: 1.4; font-style: italic; }
+
+.tool-call-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  min-height: 250px;
+}
+.tcs-title {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--dim);
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+.tcs-console {
+  flex: 1;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 12px;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  line-height: 1.4;
+  overflow-y: auto;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+}
+.tcs-label { color: #64748b; font-weight: 700; font-size: 8px; margin: 8px 0 4px; border-bottom: 1px dashed #334155; padding-bottom: 2px; }
+.tcs-label:first-child { margin-top: 0; }
+
+/* Syntax styling */
+.tc-fn { color: #38bdf8; font-weight: bold; }
+.tc-key { color: #c084fc; }
+.tc-str { color: #2dd4bf; }
+.tc-num { color: #fbbf24; }
+.tc-punct { color: #94a3b8; }
+.tc-bool { color: #f43f5e; font-weight: bold; }
+.tc-response { color: #34d399; }
+.tc-dim { color: #475569; }
+
+.controls-footer {
+  padding: 16px;
+  background: #f8fafc;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.primary-btn {
+  height: 38px;
+  border: none;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+  color: white;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(26,86,214,0.25);
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 12.5px;
+}
+.primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(26,86,214,0.35);
+}
+.primary-btn:active { transform: translateY(0); }
+.primary-btn:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.secondary-btn {
+  height: 32px;
+  border: 1px solid #cbd5e1;
+  background: var(--white);
+  color: var(--muted);
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 11px;
+}
+.secondary-btn:hover {
+  background: #f1f5f9;
+  color: var(--text);
+  border-color: #94a3b8;
+}
+
+/* ─── RECONCILIATION DAILY STATUS EMAIL MODAL ────────────────── */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-card {
+  width: 600px;
+  max-width: 90%;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+.modal-overlay.open .modal-card { transform: scale(1); }
+.modal-header {
+  padding: 16px 20px;
+  background: var(--white);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-title { font-size: 14px; font-weight: 800; color: var(--text); }
+.close-modal-btn {
+  background: transparent; border: none; font-size: 18px; color: var(--muted); cursor: pointer;
+}
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+.modal-footer {
+  padding: 14px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+/* SVG Agent Graph styles */
+.graph-node circle {
+  transition: all 0.3s ease;
+}
+.graph-node.active circle {
+  stroke-width: 3px !important;
+  animation: agentGlowPulse 1.2s ease-in-out infinite alternate;
+}
+.graph-node.active text {
+  font-weight: bold;
+}
+.animated-flow-path {
+  opacity: 1 !important;
+  animation: svgFlow 0.8s linear infinite;
+}
+@keyframes svgFlow {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes agentGlowPulse {
+  0% {
+    stroke-width: 2.5px;
+    stroke-opacity: 0.6;
+    filter: drop-shadow(0 0 3px var(--agent-glow, #1a56d6));
+  }
+  100% {
+    stroke-width: 4.5px;
+    stroke-opacity: 1.0;
+    filter: drop-shadow(0 0 12px var(--agent-glow, #1a56d6));
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ════════════════════════════════════════════════════ -->
+<div id="header">
+  <a class="logo-wrap" href="index.html">
+    <div class="logo-gem">✦</div>
+    <div class="logo-name">AutoMigrate <span>AI</span></div>
+  </a>
+
+  <div class="header-center">
+    <div class="window-status-card">
+      <span class="window-badge window-open" id="win-badge">Window Active</span>
+      <span class="window-timer" id="win-timer">Loading schedule...</span>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="session-tag">MIG-20260528-001</div>
+    <div class="status-badge badge-idle" id="exec-status">IDLE</div>
+  </div>
+</div>
+
+<!-- ═══ APP BODY ══════════════════════════════════════════════════ -->
+<div id="app-body">
+
+  <!-- LEFT: Agent Nodes & Schedule -->
+  <div id="left-panel">
+    <div class="panel-section">
+      <div class="panel-section-title">Autonomous Agent Team</div>
+      <div class="agent-flow-graph-container" style="position: relative; height: 380px; width: 100%; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+        <svg id="agent-graph-svg" width="100%" height="100%" viewBox="0 0 210 380">
+          <defs>
+            <!-- Glowing filters -->
+            <filter id="glow-active" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          
+          <!-- Connective Paths -->
+          <path id="path-scheduler" d="M 45,125 Q 105,85 105,50" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,3"/>
+          <path id="path-storage" d="M 165,125 Q 105,85 105,50" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,3"/>
+          <path id="path-supervisor-extract" d="M 105,50 L 45,215" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,3"/>
+          <path id="path-extractor-ingester" d="M 45,215 L 165,215" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,3"/>
+          <path id="path-ingester-storage" d="M 165,215 L 165,125" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,3"/>
+          <path id="path-extractor-tuner" d="M 45,215 L 45,305" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,3"/>
+          <path id="path-extractor-error" d="M 45,215 L 165,305" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,3"/>
+
+          <!-- Animated Flow Lines (only visible when active) -->
+          <path id="flow-scheduler" d="M 45,125 Q 105,85 105,50" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-dasharray="6,4" stroke-dashoffset="0" opacity="0"/>
+          <path id="flow-storage" d="M 165,125 Q 105,85 105,50" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-dasharray="6,4" stroke-dashoffset="0" opacity="0"/>
+          <path id="flow-supervisor-extract" d="M 105,50 L 45,215" fill="none" stroke="var(--violet)" stroke-width="2.5" stroke-dasharray="6,4" stroke-dashoffset="0" opacity="0"/>
+          <path id="flow-extractor-ingester" d="M 45,215 L 165,215" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-dasharray="6,4" stroke-dashoffset="0" opacity="0"/>
+          <path id="flow-ingester-storage" d="M 165,215 L 165,125" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-dasharray="6,4" stroke-dashoffset="0" opacity="0"/>
+          <path id="flow-extractor-tuner" d="M 45,215 L 45,305" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-dasharray="6,4" stroke-dashoffset="0" opacity="0"/>
+          <path id="flow-extractor-error" d="M 45,215 L 165,305" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-dasharray="6,4" stroke-dashoffset="0" opacity="0"/>
+
+          <!-- Node 1: Master Supervisor -->
+          <g id="gnode-supervisor" class="graph-node" transform="translate(105,50)">
+            <circle r="20" fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5" id="c-supervisor"/>
+            <text y="5" text-anchor="middle" font-size="14" font-family="Inter">🧠</text>
+            <text y="32" text-anchor="middle" font-size="8.5" font-weight="700" fill="var(--muted)" font-family="Inter" id="t-supervisor">Supervisor</text>
+          </g>
+
+          <!-- Node 2: Scheduler Agent -->
+          <g id="gnode-scheduler" class="graph-node" transform="translate(45,125)">
+            <circle r="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" id="c-scheduler"/>
+            <text y="4" text-anchor="middle" font-size="11" font-family="Inter">⏰</text>
+            <text y="26" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--muted)" font-family="Inter" id="t-scheduler">Scheduler</text>
+          </g>
+
+          <!-- Node 3: Storage Monitor -->
+          <g id="gnode-storage" class="graph-node" transform="translate(165,125)">
+            <circle r="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" id="c-storage"/>
+            <text y="4" text-anchor="middle" font-size="11" font-family="Inter">💾</text>
+            <text y="26" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--muted)" font-family="Inter" id="t-storage">Storage Mon</text>
+          </g>
+
+          <!-- Node 4: Extractor Agent -->
+          <g id="gnode-extractor" class="graph-node" transform="translate(45,215)">
+            <circle r="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" id="c-extractor"/>
+            <text y="4" text-anchor="middle" font-size="11" font-family="Inter">📤</text>
+            <text y="26" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--muted)" font-family="Inter" id="t-extractor">Extractor</text>
+          </g>
+
+          <!-- Node 5: Ingester Agent -->
+          <g id="gnode-ingester" class="graph-node" transform="translate(165,215)">
+            <circle r="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" id="c-ingester"/>
+            <text y="4" text-anchor="middle" font-size="11" font-family="Inter">📥</text>
+            <text y="26" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--muted)" font-family="Inter" id="t-ingester">Ingester</text>
+          </g>
+
+          <!-- Node 6: Performance Tuner -->
+          <g id="gnode-tuner" class="graph-node" transform="translate(45,305)">
+            <circle r="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" id="c-tuner"/>
+            <text y="4" text-anchor="middle" font-size="11" font-family="Inter">⚡</text>
+            <text y="26" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--muted)" font-family="Inter" id="t-tuner">Perf Tuner</text>
+          </g>
+
+          <!-- Node 7: Error Resolver -->
+          <g id="gnode-error" class="graph-node" transform="translate(165,305)">
+            <circle r="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" id="c-error"/>
+            <text y="4" text-anchor="middle" font-size="11" font-family="Inter">🔧</text>
+            <text y="26" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--muted)" font-family="Inter" id="t-error">Error Rsv</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Migration Schedule</div>
+      <div class="schedule-group">
+        <button class="schedule-btn active" id="sched-week" onclick="toggleSchedule('week')">
+          <span>📅 Weekday Off-Hours</span>
+          <span class="tag">Active</span>
+        </button>
+        <button class="schedule-btn" id="sched-weekend" onclick="toggleSchedule('weekend')">
+          <span>🎉 Weekend Continuous</span>
+          <span class="tag">24H</span>
+        </button>
+      </div>
+      <div class="schedule-desc" id="sched-desc">
+        Weekday schedule: Active 5:30 PM to 8:30 AM daily. Inactive during office hours to prevent production database load.
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="back-wizard-btn">
+        <span>⬅ Return to Configuration</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- CENTER: Real-time Operational VM Monitor & Charts -->
+  <div id="center-panel">
+    <div>
+      <div class="section-title">Autonomous VM Orchestration Dashboard</div>
+      <div class="section-desc">Real-time status of 4 distributed Node Worker VMs overseen by Supervisor Agent.</div>
+    </div>
+
+    <!-- 4 VMs Grid -->
+    <div class="vm-grid">
+      <!-- VM-1 -->
+      <div class="vm-card" id="vm-card-1">
+        <div class="vm-header">
+          <div class="vm-identity">
+            <div class="vm-indicator"></div>
+            <span class="vm-name">VM-1 (worker-prod-01)</span>
+          </div>
+          <span class="vm-status-badge vms-offline" id="vm-s-1">OFFLINE</span>
+        </div>
+        
+        <div class="vm-storage-sec">
+          <div class="vms-lbl-row">
+            <span>Disk Space (100GB Disk)</span>
+            <span class="vm-storage-alert">DISK THRESHOLD WARNING</span>
+            <span id="vm-space-txt-1">USED: 45GB (45%)</span>
+          </div>
+          <div class="vms-bar-bg">
+            <div class="vms-bar-fill" id="vm-bar-1"></div>
+          </div>
+        </div>
+
+        <div class="vm-pipeline" id="vm-pipe-1">
+          <span class="pipeline-node" id="vm-n-src-1">FileNet</span>
+          <span class="pipeline-arrow" id="vm-a-1-1"></span>
+          <span class="pipeline-node" id="vm-n-disk-1">VM Disk</span>
+          <span class="pipeline-arrow" id="vm-a-2-1"></span>
+          <span class="pipeline-node" id="vm-n-tgt-1">AWS S3</span>
+        </div>
+
+        <div class="vm-telemetry">
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-cpu-1">0%</span>
+            <span class="vmt-lbl">CPU Load</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-tput-1">0 /s</span>
+            <span class="vmt-lbl">Ingestion</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-dir-1">0 GB</span>
+            <span class="vmt-lbl">Temp Folder</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VM-2 -->
+      <div class="vm-card" id="vm-card-2">
+        <div class="vm-header">
+          <div class="vm-identity">
+            <div class="vm-indicator"></div>
+            <span class="vm-name">VM-2 (worker-prod-02)</span>
+          </div>
+          <span class="vm-status-badge vms-offline" id="vm-s-2">OFFLINE</span>
+        </div>
+        
+        <div class="vm-storage-sec">
+          <div class="vms-lbl-row">
+            <span>Disk Space (100GB Disk)</span>
+            <span class="vm-storage-alert">DISK THRESHOLD WARNING</span>
+            <span id="vm-space-txt-2">USED: 45GB (45%)</span>
+          </div>
+          <div class="vms-bar-bg">
+            <div class="vms-bar-fill" id="vm-bar-2"></div>
+          </div>
+        </div>
+
+        <div class="vm-pipeline" id="vm-pipe-2">
+          <span class="pipeline-node" id="vm-n-src-2">FileNet</span>
+          <span class="pipeline-arrow" id="vm-a-1-2"></span>
+          <span class="pipeline-node" id="vm-n-disk-2">VM Disk</span>
+          <span class="pipeline-arrow" id="vm-a-2-2"></span>
+          <span class="pipeline-node" id="vm-n-tgt-2">AWS S3</span>
+        </div>
+
+        <div class="vm-telemetry">
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-cpu-2">0%</span>
+            <span class="vmt-lbl">CPU Load</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-tput-2">0 /s</span>
+            <span class="vmt-lbl">Ingestion</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-dir-2">0 GB</span>
+            <span class="vmt-lbl">Temp Folder</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VM-3 -->
+      <div class="vm-card" id="vm-card-3">
+        <div class="vm-header">
+          <div class="vm-identity">
+            <div class="vm-indicator"></div>
+            <span class="vm-name">VM-3 (worker-prod-03)</span>
+          </div>
+          <span class="vm-status-badge vms-offline" id="vm-s-3">OFFLINE</span>
+        </div>
+        
+        <div class="vm-storage-sec">
+          <div class="vms-lbl-row">
+            <span>Disk Space (100GB Disk)</span>
+            <span class="vm-storage-alert" id="vms-alert-3">CRITICAL: &lt;10GB FREE</span>
+            <span id="vm-space-txt-3">USED: 45GB (45%)</span>
+          </div>
+          <div class="vms-bar-bg">
+            <div class="vms-bar-fill" id="vm-bar-3"></div>
+          </div>
+        </div>
+
+        <div class="vm-pipeline" id="vm-pipe-3">
+          <span class="pipeline-node" id="vm-n-src-3">FileNet</span>
+          <span class="pipeline-arrow" id="vm-a-1-3"></span>
+          <span class="pipeline-node" id="vm-n-disk-3">VM Disk</span>
+          <span class="pipeline-arrow" id="vm-a-2-3"></span>
+          <span class="pipeline-node" id="vm-n-tgt-3">AWS S3</span>
+        </div>
+
+        <div class="vm-telemetry">
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-cpu-3">0%</span>
+            <span class="vmt-lbl">CPU Load</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-tput-3">0 /s</span>
+            <span class="vmt-lbl">Ingestion</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-dir-3">0 GB</span>
+            <span class="vmt-lbl">Temp Folder</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VM-4 -->
+      <div class="vm-card" id="vm-card-4">
+        <div class="vm-header">
+          <div class="vm-identity">
+            <div class="vm-indicator"></div>
+            <span class="vm-name">VM-4 (worker-prod-04)</span>
+          </div>
+          <span class="vm-status-badge vms-offline" id="vm-s-4">OFFLINE</span>
+        </div>
+        
+        <div class="vm-storage-sec">
+          <div class="vms-lbl-row">
+            <span>Disk Space (100GB Disk)</span>
+            <span class="vm-storage-alert">DISK THRESHOLD WARNING</span>
+            <span id="vm-space-txt-4">USED: 45GB (45%)</span>
+          </div>
+          <div class="vms-bar-bg">
+            <div class="vms-bar-fill" id="vm-bar-4"></div>
+          </div>
+        </div>
+
+        <div class="vm-pipeline" id="vm-pipe-4">
+          <span class="pipeline-node" id="vm-n-src-4">FileNet</span>
+          <span class="pipeline-arrow" id="vm-a-1-4"></span>
+          <span class="pipeline-node" id="vm-n-disk-4">VM Disk</span>
+          <span class="pipeline-arrow" id="vm-a-2-4"></span>
+          <span class="pipeline-node" id="vm-n-tgt-4">AWS S3</span>
+        </div>
+
+        <div class="vm-telemetry">
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-cpu-4">0%</span>
+            <span class="vmt-lbl">CPU Load</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-tput-4">0 /s</span>
+            <span class="vmt-lbl">Ingestion</span>
+          </div>
+          <div class="vmt-item">
+            <span class="vmt-val" id="vm-dir-4">0 GB</span>
+            <span class="vmt-lbl">Temp Folder</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tuning Chart -->
+    <div class="tuning-section">
+      <div class="section-title">⚡ Performance Tuner — Batch Size & Concurrency Auto-scaling</div>
+      <div class="section-desc" id="tuning-status-label">AutoMigrate Performance Tuner increases batch and thread bounds to hit peak S3 write limits.</div>
+      
+      <div class="tuning-chart-wrap">
+        <svg id="chart-svg" viewBox="0 0 700 120" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#0d9488" stop-opacity="0.05"/>
+            </linearGradient>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#0d9488"/>
+              <stop offset="100%" stop-color="#7c3aed"/>
+            </linearGradient>
+          </defs>
+          <!-- Y axis labels -->
+          <text x="0" y="110" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">0</text>
+          <text x="0" y="86" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">1.5k</text>
+          <text x="0" y="62" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">3.0k</text>
+          <text x="0" y="38" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">4.5k</text>
+          <text x="0" y="14" fill="#94a3b8" font-size="8" font-family="JetBrains Mono, monospace">6.0k+</text>
+          
+          <!-- Horizontal grid lines -->
+          <line x1="22" y1="108" x2="695" y2="108" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="84" x2="695" y2="84" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="60" x2="695" y2="60" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="36" x2="695" y2="36" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="22" y1="12" x2="695" y2="12" stroke="#f1f5f9" stroke-width="1"/>
+          
+          <!-- Chart fill polygon -->
+          <polygon id="chart-fill" fill="url(#chartFill)" points=""/>
+          <!-- Chart line -->
+          <polyline id="chart-line" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points=""/>
+          
+          <!-- Optimal line -->
+          <line id="optimal-line" x1="22" y1="0" x2="695" y2="0" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="6,4" opacity="0"/>
+          <text id="optimal-label" x="530" y="0" fill="#16a34a" font-size="9" font-family="JetBrains Mono, monospace" font-weight="bold" opacity="0">OPTIMAL 4,380/s</text>
+          
+          <g id="chart-points"></g>
+          <g id="chart-labels"></g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Bottom Split Panel -->
+    <div class="bottom-split">
+      <!-- Progress bars -->
+      <div class="progress-panel">
+        <div class="section-title" style="font-size:12.5px; margin-bottom:8px;">Overall Class Progress</div>
+        <div class="progress-list">
+          <div class="prog-row">
+            <div class="prog-labels">
+              <span class="pr-name">LoanDocuments</span>
+              <span class="pr-val" id="pc-loan">0 / 125,000</span>
+            </div>
+            <div class="pr-bar-bg"><div class="pr-bar-fill" id="pb-loan"></div></div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-labels">
+              <span class="pr-name">InvoiceRecords</span>
+              <span class="pr-val" id="pc-invoice">0 / 89,400</span>
+            </div>
+            <div class="pr-bar-bg"><div class="pr-bar-fill" id="pb-invoice"></div></div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-labels">
+              <span class="pr-name">Contracts</span>
+              <span class="pr-val" id="pc-contracts">0 / 67,200</span>
+            </div>
+            <div class="pr-bar-bg"><div class="pr-bar-fill" id="pb-contracts"></div></div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-labels">
+              <span class="pr-name">PolicyDocuments</span>
+              <span class="pr-val" id="pc-policy">0 / 45,800</span>
+            </div>
+            <div class="pr-bar-bg"><div class="pr-bar-fill" id="pb-policy"></div></div>
+          </div>
+          <div class="prog-row">
+            <div class="prog-labels">
+              <span class="pr-name">AuditLogs</span>
+              <span class="pr-val" id="pc-audit">0 / 22,600</span>
+            </div>
+            <div class="pr-bar-bg"><div class="pr-bar-fill" id="pb-audit"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live events -->
+      <div class="feed-panel">
+        <div class="section-title" style="font-size:12.5px; margin-bottom:8px;">⚡ Live Agent Execution Feed</div>
+        <div class="live-feed-scroll" id="live-feed-scroll">
+          <div class="lf-entry show" style="color: #64748b;">[System] Autonomous agent framework initialized. Awaiting run commands...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Code/Console trace & Agent reasoning -->
+  <div id="right-panel">
+    <!-- Active Agent Details -->
+    <div class="ap-card">
+      <div class="ap-avatar" id="ap-avatar">⚙️</div>
+      <div class="ap-meta">
+        <div class="ap-name" id="ap-agent-name">Scheduler Agent</div>
+        <div class="ap-role" id="ap-agent-role">Orchestration Watcher</div>
+      </div>
+    </div>
+
+    <!-- LLM Reasoning Bubble -->
+    <div class="reasoning-bubble">
+      <div class="rb-title">Supervisor LLM Reasoning</div>
+      <div class="rb-text" id="ap-reasoning">Awaiting initiation of autonomous migration sequence. When started, agents will coordinate distributed job deployments.</div>
+    </div>
+
+    <!-- Monospaced API Tool Call Console -->
+    <div class="tool-call-section">
+      <div class="tcs-title">Active Tool Call Console</div>
+      <div class="tcs-console" id="tcs-console">
+        <div class="tcs-label">HTTP REQUEST</div>
+        <div id="tc-content" class="tc-dim">// Awaiting execution...</div>
+        <div class="tcs-label">HTTP RESPONSE</div>
+        <div id="tc-response" class="tc-dim">// No active tool response</div>
+      </div>
+    </div>
+
+    <!-- Primary Control Buttons -->
+    <div class="controls-footer">
+      <button class="primary-btn" id="start-btn" onclick="startAutonomousFlow()">
+        <span>▶ Start Autonomous Flow</span>
+      </button>
+      <button class="secondary-btn" id="override-btn" onclick="toggleMigrationWindow()">
+        <span>Force Toggle Migration Window</span>
+      </button>
+      <button class="secondary-btn" id="report-btn" onclick="openEmailReport()" disabled>
+        <span>📊 View Daily Client Report</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL REPORT MODAL -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">✉️ Synthesized Daily Status Report (Ready to Email)</div>
+      <button class="close-modal-btn" onclick="closeEmailReport()">×</button>
+    </div>
+    <div class="modal-body" id="email-body-content">
+      <!-- Generated Report Content goes here -->
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" style="height:32px; font-size:11px; padding:0 12px; margin-right:4px;" onclick="closeEmailReport()">Close Preview</button>
+      <button class="secondary-btn" style="height:32px; font-size:11px; padding:0 12px; margin-right:4px;" onclick="copyEmailHTML()">📋 Copy HTML</button>
+      <button class="secondary-btn" style="height:32px; font-size:11px; padding:0 12px; margin-right:4px;" onclick="openInMailClient()">📧 Open Outlook</button>
+      <button class="primary-btn" style="height:32px; font-size:11px; padding:0 12px;" onclick="simulateEmailSend()">
+        <span>🚀 Send Report</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   STATE & DATA
+   ═══════════════════════════════════════════════════════════════ */
+let isRunning = false;
+let windowOpen = true;
+let secondsRemaining = 7 * 3600 + 42 * 60 + 18; // ~7h 42m remaining
+let countdownInterval = null;
+let mainSimInterval = null;
+let activeScheduleType = 'week';
+
+const AGENTS = {
+  supervisor: { name: 'Master Supervisor', role: 'Decision & Orchestration', emoji: '🧠', color: '#1a56d6' },
+  scheduler: { name: 'Scheduler Agent', role: 'Migration Window Guard', emoji: '⏰', color: '#d97706' },
+  storage: { name: 'Storage Monitor', role: 'Disk Space Watchdog', emoji: '💾', color: '#dc2626' },
+  extractor: { name: 'Extractor Agent', role: 'Parallel VM Extraction', emoji: '📤', color: '#7c3aed' },
+  ingester: { name: 'Ingester Agent', role: 'AWS S3 Ingestion & Cleanup', emoji: '📥', color: '#0d9488' },
+  tuner: { name: 'Performance Tuner', role: 'Dynamic Batch/Thread Optimizer', emoji: '⚡', color: '#16a34a' },
+  error: { name: 'Error Resolver', role: 'Rollback & Checkpoint Retry', emoji: '🔧', color: '#b45309' }
+};
+
+let migState = {
+  progress: 0,
+  migrated: 0,
+  throughput: 0,
+  batchSize: 50000,
+  threads: 4,
+  errors: 0,
+  healed: 0,
+  totalDocs: 350000
+};
+
+let vms = [
+  { id: 1, name: 'VM-1 (worker-prod-01)', ip: '10.240.0.11', status: 'offline', usedGb: 45.0, tempFolderGb: 0, cpu: 0, tput: 0, limitReached: false },
+  { id: 2, name: 'VM-2 (worker-prod-02)', ip: '10.240.0.12', status: 'offline', usedGb: 38.0, tempFolderGb: 0, cpu: 0, tput: 0, limitReached: false },
+  { id: 3, name: 'VM-3 (worker-prod-03)', ip: '10.240.0.13', status: 'offline', usedGb: 48.0, tempFolderGb: 0, cpu: 0, tput: 0, limitReached: false },
+  { id: 4, name: 'VM-4 (worker-prod-04)', ip: '10.240.0.14', status: 'offline', usedGb: 42.0, tempFolderGb: 0, cpu: 0, tput: 0, limitReached: false }
+];
+
+let classProgress = { LoanDocuments: 0, InvoiceRecords: 0, Contracts: 0, PolicyDocuments: 0, AuditLogs: 0 };
+let classTotals = { LoanDocuments: 125000, InvoiceRecords: 89400, Contracts: 67200, PolicyDocuments: 45800, AuditLogs: 22600 };
+let chartPoints = [];
+let simTimers = [];
+
+/* ─── Syntax helpers ─── */
+function tcFn(s) { return `<span class="tc-fn">${s}</span>`; }
+function tcKey(s) { return `<span class="tc-key">${s}</span>`; }
+function tcStr(s) { return `<span class="tc-str">"${s}"</span>`; }
+function tcNum(s) { return `<span class="tc-num">${s}</span>`; }
+function tcPunct(s) { return `<span class="tc-punct">${s}</span>`; }
+function tcBool(s) { return `<span class="tc-bool">${s}</span>`; }
+function tcDim(s) { return `<span class="tc-dim">${s}</span>`; }
+
+function now() {
+  const d = new Date();
+  return d.toTimeString().slice(0, 8);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCHEDULER & WINDOW COUNTDOWN
+   ═══════════════════════════════════════════════════════════════ */
+function startCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    if (windowOpen) {
+      secondsRemaining--;
+      if (secondsRemaining <= 0) {
+        windowOpen = false;
+        secondsRemaining = 9 * 3600; // time until next window
+        updateWindowUI();
+        if (isRunning) forceStopDueToWindowClose();
+      }
+    } else {
+      secondsRemaining--;
+      if (secondsRemaining <= 0) {
+        windowOpen = true;
+        secondsRemaining = 15 * 3600;
+        updateWindowUI();
+      }
+    }
+    updateCountdownText();
+  }, 1000);
+  updateWindowUI();
+  updateCountdownText();
+}
+
+function updateCountdownText() {
+  const hours = Math.floor(secondsRemaining / 3600);
+  const minutes = Math.floor((secondsRemaining % 3600) / 60);
+  const secs = secondsRemaining % 60;
+  const pad = (n) => n.toString().padStart(2, '0');
+  
+  const label = windowOpen ? 'Active Time Rem:' : 'Closed Time Rem:';
+  document.getElementById('win-timer').textContent = `${label} ${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+}
+
+function updateWindowUI() {
+  const b = document.getElementById('win-badge');
+  if (windowOpen) {
+    b.className = 'window-badge window-open';
+    b.textContent = 'Window Active';
+  } else {
+    b.className = 'window-badge window-closed';
+    b.textContent = 'Window Closed';
+  }
+}
+
+function toggleMigrationWindow() {
+  windowOpen = !windowOpen;
+  secondsRemaining = windowOpen ? 15 * 3600 : 9 * 3600;
+  updateWindowUI();
+  updateCountdownText();
+  
+  addEvent(windowOpen ? 'OK' : 'WARN', `Migration window manually overridden to ${windowOpen ? 'OPEN' : 'CLOSED'}.`);
+  addMiniLog('SCH', `Window overridden: ${windowOpen ? 'OPEN' : 'CLOSED'}`, windowOpen ? '#16a34a' : '#dc2626');
+  
+  if (!windowOpen && isRunning) {
+    forceStopDueToWindowClose();
+  }
+}
+
+function toggleSchedule(type) {
+  activeScheduleType = type;
+  document.getElementById('sched-week').classList.remove('active');
+  document.getElementById('sched-weekend').classList.remove('active');
+  
+  if (type === 'week') {
+    document.getElementById('sched-week').classList.add('active');
+    document.getElementById('sched-desc').textContent = 'Weekday schedule: Active 5:30 PM to 8:30 AM daily. Inactive during office hours to prevent production database load.';
+    if (!windowOpen) {
+      windowOpen = true;
+      secondsRemaining = 15 * 3600;
+    }
+  } else {
+    document.getElementById('sched-weekend').classList.add('active');
+    document.getElementById('sched-desc').textContent = 'Weekend schedule: Continuous 24-hour operation on Saturdays and Sundays. Heavy throughput modes active.';
+    windowOpen = true;
+    secondsRemaining = 24 * 3600;
+  }
+  updateWindowUI();
+  updateCountdownText();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AGENT & TELEMETRY UI UPDATES
+   ═══════════════════════════════════════════════════════════════ */
+function setAgentActive(agentKey) {
+  // Reset all SVG nodes and flows
+  Object.keys(AGENTS).forEach(k => {
+    const gNode = document.getElementById('gnode-' + k);
+    const circle = document.getElementById('c-' + k);
+    const text = document.getElementById('t-' + k);
+    if (gNode) {
+      gNode.classList.remove('active');
+      gNode.style.removeProperty('--agent-glow');
+    }
+    if (circle) {
+      circle.style.stroke = '';
+      circle.style.filter = '';
+    }
+    if (text) {
+      text.style.fill = '';
+    }
+  });
+
+  // Reset all flow paths
+  const flowPaths = [
+    'flow-scheduler',
+    'flow-storage',
+    'flow-supervisor-extract',
+    'flow-extractor-ingester',
+    'flow-ingester-storage',
+    'flow-extractor-tuner',
+    'flow-extractor-error'
+  ];
+  flowPaths.forEach(id => {
+    const path = document.getElementById(id);
+    if (path) {
+      path.classList.remove('animated-flow-path');
+    }
+  });
+
+  if (!agentKey) return;
+
+  const gNode = document.getElementById('gnode-' + agentKey);
+  const circle = document.getElementById('c-' + agentKey);
+  const text = document.getElementById('t-' + agentKey);
+  
+  if (gNode && circle) {
+    gNode.classList.add('active');
+    gNode.style.setProperty('--agent-glow', AGENTS[agentKey].color);
+    circle.style.stroke = AGENTS[agentKey].color;
+    if (text) {
+      text.style.fill = AGENTS[agentKey].color;
+    }
+
+    // Update Right Panel Active Agent details
+    document.getElementById('ap-avatar').textContent = AGENTS[agentKey].emoji;
+    document.getElementById('ap-agent-name').textContent = AGENTS[agentKey].name;
+    document.getElementById('ap-agent-role').textContent = AGENTS[agentKey].role;
+  }
+
+  // Trigger relevant flow paths
+  let activeFlows = [];
+  if (agentKey === 'scheduler') {
+    activeFlows = ['flow-scheduler'];
+  } else if (agentKey === 'storage') {
+    activeFlows = ['flow-storage', 'flow-ingester-storage'];
+  } else if (agentKey === 'extractor') {
+    activeFlows = ['flow-supervisor-extract'];
+  } else if (agentKey === 'ingester') {
+    activeFlows = ['flow-extractor-ingester'];
+  } else if (agentKey === 'tuner') {
+    activeFlows = ['flow-extractor-tuner'];
+  } else if (agentKey === 'error') {
+    activeFlows = ['flow-extractor-error'];
+  } else if (agentKey === 'supervisor') {
+    activeFlows = ['flow-supervisor-extract'];
+  }
+
+  activeFlows.forEach(id => {
+    const path = document.getElementById(id);
+    if (path) {
+      path.classList.add('animated-flow-path');
+    }
+  });
+}
+
+function updateAgentPanel(reasoning, reqContent, respContent) {
+  if (reasoning !== null) document.getElementById('ap-reasoning').textContent = reasoning;
+  if (reqContent !== null) document.getElementById('tc-content').innerHTML = reqContent;
+  if (respContent !== null) document.getElementById('tc-response').innerHTML = respContent;
+}
+
+function addEvent(type, message) {
+  const scroll = document.getElementById('live-feed-scroll');
+  const entry = document.createElement('div');
+  const typeClasses = { INFO: 'lf-t-info', OK: 'lf-t-ok', WARN: 'lf-t-warn', HEAL: 'lf-t-heal', DONE: 'lf-t-done' };
+  
+  entry.className = 'lf-entry';
+  entry.innerHTML = `<span class="lf-ts">[${now()}]</span><span class="lf-type ${typeClasses[type] || 'lf-t-info'}">${type}</span><span class="lf-msg">${message}</span>`;
+  
+  scroll.appendChild(entry);
+  if (scroll.children.length > 80) scroll.removeChild(scroll.firstChild);
+  
+  // Auto-scroll
+  scroll.scrollTop = scroll.scrollHeight;
+  
+  // Slide in effect
+  requestAnimationFrame(() => entry.classList.add('show'));
+}
+
+function addMiniLog(agentLabel, message, color) {
+  // Log directly in active feed panel for better context
+  addEvent('INFO', `[${agentLabel}] ${message}`);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VM DASHBOARD RENDERING
+   ═══════════════════════════════════════════════════════════════ */
+function updateVMUI(id) {
+  const vm = vms.find(v => v.id === id);
+  const card = document.getElementById(`vm-card-${id}`);
+  const statusBadge = document.getElementById(`vm-s-${id}`);
+  const spaceTxt = document.getElementById(`vm-space-txt-${id}`);
+  const bar = document.getElementById(`vm-bar-${id}`);
+  
+  const cpuVal = document.getElementById(`vm-cpu-${id}`);
+  const tputVal = document.getElementById(`vm-tput-${id}`);
+  const dirVal = document.getElementById(`vm-dir-${id}`);
+  
+  // Remove existing styles
+  card.className = 'vm-card';
+  statusBadge.className = 'vm-status-badge';
+  
+  // Status mapping
+  if (vm.status === 'offline') {
+    statusBadge.textContent = 'OFFLINE';
+    statusBadge.classList.add('vms-offline');
+  } else if (vm.status === 'active') {
+    card.classList.add('active');
+    statusBadge.textContent = 'EXTRACTING';
+    statusBadge.classList.add('vms-active');
+  } else if (vm.status === 'ingesting') {
+    card.classList.add('active');
+    statusBadge.textContent = 'INGESTING';
+    statusBadge.classList.add('vms-active');
+  } else if (vm.status === 'paused') {
+    card.classList.add('critical', 'paused');
+    statusBadge.textContent = 'PAUSED - STORAGE';
+    statusBadge.classList.add('vms-paused');
+  } else if (vm.status === 'cleaning') {
+    card.classList.add('active');
+    statusBadge.textContent = 'CLEANING UP';
+    statusBadge.classList.add('vms-cleaning');
+  }
+
+  // Storage calculation
+  const totalStorage = 100.0;
+  const currentUsed = vm.usedGb + vm.tempFolderGb;
+  const freeSpace = totalStorage - currentUsed;
+  const pctUsed = (currentUsed / totalStorage) * 100;
+  
+  spaceTxt.innerHTML = `FREE: <strong>${freeSpace.toFixed(1)} GB</strong> | USED: ${currentUsed.toFixed(1)} GB (${pctUsed.toFixed(0)}%)`;
+  bar.style.width = pctUsed + '%';
+  
+  // Class colors for storage warning
+  if (freeSpace <= 10.0) {
+    card.classList.add('critical');
+    vm.limitReached = true;
+  } else if (freeSpace <= 25.0) {
+    card.classList.add('medium');
+    vm.limitReached = false;
+  } else {
+    vm.limitReached = false;
+  }
+  
+  // VM Pipeline Flows
+  const pipe = document.getElementById(`vm-pipe-${id}`);
+  const srcNode = document.getElementById(`vm-n-src-${id}`);
+  const arrow1 = document.getElementById(`vm-a-1-${id}`);
+  const diskNode = document.getElementById(`vm-n-disk-${id}`);
+  const arrow2 = document.getElementById(`vm-a-2-${id}`);
+  const tgtNode = document.getElementById(`vm-n-tgt-${id}`);
+  
+  srcNode.classList.remove('active');
+  arrow1.classList.remove('active');
+  diskNode.classList.remove('active');
+  arrow2.classList.remove('active');
+  tgtNode.classList.remove('active');
+  
+  if (vm.status === 'active') {
+    srcNode.classList.add('active');
+    arrow1.classList.add('active');
+    diskNode.classList.add('active');
+  } else if (vm.status === 'ingesting') {
+    diskNode.classList.add('active');
+    arrow2.classList.add('active');
+    tgtNode.classList.add('active');
+  } else if (vm.status === 'cleaning') {
+    diskNode.classList.add('active');
+  }
+  
+  // Telemetry numeric values
+  cpuVal.textContent = vm.cpu + '%';
+  tputVal.textContent = vm.tput.toLocaleString() + ' /s';
+  dirVal.textContent = vm.tempFolderGb.toFixed(1) + ' GB';
+}
+
+function updateAllVMs() {
+  for (let i = 1; i <= 4; i++) {
+    updateVMUI(i);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DYNAMIC SVG PERFORMANCE TUNER CHART
+   ═══════════════════════════════════════════════════════════════ */
+function tputToY(tput) {
+  // Map 0-6000 docs/s → 108 to 4 (SVG coordinates, higher is lower)
+  return 108 - (tput / 6000) * 104;
+}
+
+function idxToX(idx, total) {
+  const left = 22, right = 695;
+  const step = (right - left) / (total - 1);
+  return left + idx * step;
+}
+
+function addChartPoint(idx, tput, label, total) {
+  const x = idxToX(idx, total);
+  const y = tputToY(tput);
+  
+  chartPoints.push({ x, y, tput, label });
+  
+  const polyline = document.getElementById('chart-line');
+  const fill = document.getElementById('chart-fill');
+  
+  const ptsStr = chartPoints.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  polyline.setAttribute('points', ptsStr);
+  
+  const fillPts = ptsStr + ` ${x.toFixed(1)},108 ${idxToX(0, total).toFixed(1)},108`;
+  fill.setAttribute('points', fillPts);
+  
+  // Draw Circle
+  const pg = document.getElementById('chart-points');
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', x);
+  circle.setAttribute('cy', y);
+  circle.setAttribute('r', '4');
+  circle.setAttribute('fill', '#7c3aed');
+  circle.setAttribute('stroke', '#ffffff');
+  circle.setAttribute('stroke-width', '2');
+  pg.appendChild(circle);
+  
+  // Draw Label Text
+  const lg = document.getElementById('chart-labels');
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', x);
+  text.setAttribute('y', y - 10);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('fill', '#64748b');
+  text.setAttribute('font-size', '8');
+  text.setAttribute('font-family', 'JetBrains Mono, monospace');
+  text.textContent = label;
+  lg.appendChild(text);
+  
+  const tputLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  tputLabel.setAttribute('x', x);
+  tputLabel.setAttribute('y', y - 20);
+  tputLabel.setAttribute('text-anchor', 'middle');
+  tputLabel.setAttribute('fill', '#0d9488');
+  tputLabel.setAttribute('font-size', '7');
+  tputLabel.setAttribute('font-weight', 'bold');
+  tputLabel.setAttribute('font-family', 'JetBrains Mono, monospace');
+  tputLabel.textContent = (tput / 1000).toFixed(2) + 'k/s';
+  lg.appendChild(tputLabel);
+}
+
+function showOptimalLine(tput, xFrom) {
+  const y = tputToY(tput);
+  const line = document.getElementById('optimal-line');
+  const label = document.getElementById('optimal-label');
+  
+  line.setAttribute('y1', y);
+  line.setAttribute('y2', y);
+  line.setAttribute('x1', xFrom);
+  line.setAttribute('opacity', '1');
+  
+  label.setAttribute('y', y - 3);
+  label.setAttribute('opacity', '1');
+}
+
+function resetChart() {
+  document.getElementById('chart-line').setAttribute('points', '');
+  document.getElementById('chart-fill').setAttribute('points', '');
+  document.getElementById('chart-points').innerHTML = '';
+  document.getElementById('chart-labels').innerHTML = '';
+  document.getElementById('optimal-line').setAttribute('opacity', '0');
+  document.getElementById('optimal-label').setAttribute('opacity', '0');
+  chartPoints = [];
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTONOMOUS MULTI-AGENT EXECUTION ENGINE
+   ═══════════════════════════════════════════════════════════════ */
+function addSimTimer(id) {
+  simTimers.push(id);
+}
+
+function clearAllTimers() {
+  simTimers.forEach(t => clearTimeout(t));
+  simTimers = [];
+  if (mainSimInterval) clearInterval(mainSimInterval);
+}
+
+function formatBytes(n) {
+  return n.toFixed(1) + ' GB';
+}
+
+function startAutonomousFlow() {
+  if (isRunning) return;
+  if (!windowOpen) {
+    alert("Migration window is currently closed! Enable Weekday Off-Hours or click 'Force Toggle Migration Window' to open it.");
+    return;
+  }
+  
+  isRunning = true;
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('exec-status').className = 'status-badge badge-running';
+  document.getElementById('exec-status').textContent = 'RUNNING';
+  
+  // Clear previous runs
+  resetChart();
+  clearAllTimers();
+  document.getElementById('live-feed-scroll').innerHTML = '';
+  document.getElementById('report-btn').disabled = true;
+  
+  // Initial states
+  migState.progress = 0;
+  migState.migrated = 0;
+  migState.throughput = 0;
+  migState.errors = 0;
+  migState.healed = 0;
+  
+  Object.keys(classProgress).forEach(k => classProgress[k] = 0);
+  updateMetricsUI();
+  
+  vms.forEach(vm => {
+    vm.status = 'offline';
+    vm.cpu = 0;
+    vm.tput = 0;
+    vm.tempFolderGb = 0;
+    vm.usedGb = Math.floor(Math.random() * 20) + 30; // base used disk between 30-50GB
+  });
+  updateAllVMs();
+
+  // Begin Simulation pipeline
+  executePhase1();
+}
+
+/* ─── PHASE 1: Connectivity & Pre-checks ─── */
+function executePhase1() {
+  setAgentActive('scheduler');
+  addEvent('INFO', 'Scheduler Agent opening window. Starting node initializations...');
+  updateAgentPanel(
+    'Evaluating schedule window parameters. Weekday schedule verified. Active window open.',
+    `${tcFn('checkMigrationWindow')}${tcPunct('()')}`,
+    `${tcPunct('{')} ${tcKey('window')}: ${tcStr('OPEN')}, ${tcKey('mode')}: ${tcStr('WEEKDAY_OFF_HOURS')} ${tcPunct('}')}`
+  );
+  
+  addSimTimer(setTimeout(() => {
+    setAgentActive('supervisor');
+    addEvent('INFO', 'Supervisor Agent starting VM storage pre-checks on all workers...');
+    updateAgentPanel(
+      'Evaluating system resources on worker cluster VMs (VM-1 through VM-4). Confirming disk space meets the 10 GB safe extraction limit.',
+      `${tcFn('verifyVMBootStatus')}${tcPunct('()')}`,
+      `${tcPunct('[')}\n  ${tcKey('vm1')}: ${tcStr('ONLINE')},\n  ${tcKey('vm2')}: ${tcStr('ONLINE')},\n  ${tcKey('vm3')}: ${tcStr('ONLINE')},\n  ${tcKey('vm4')}: ${tcStr('ONLINE')}\n${tcPunct(']')}`
+    );
+    
+    // Boot VMs to idle/init
+    vms.forEach(vm => {
+      vm.status = 'active';
+      vm.cpu = 15;
+    });
+    updateAllVMs();
+  }, 1500));
+
+  addSimTimer(setTimeout(() => {
+    setAgentActive('storage');
+    addEvent('INFO', 'Storage Monitor Agent completed baseline storage tests. Disk space healthy.');
+    vms.forEach(vm => {
+      const free = 100.0 - vm.usedGb;
+      addEvent('OK', `VM-${vm.id} local storage status: Free = ${free.toFixed(1)} GB. Threshold check PASSED.`);
+    });
+    
+    updateAgentPanel(
+      'Disk capacities analyzed across all 4 worker threads. All nodes register above the 10 GB write halt threshold limit.',
+      `${tcFn('checkClusterStorage')}${tcPunct('()')}`,
+      `${tcPunct('{')} ${tcKey('clusterFreeGb')}: ${tcNum('235.0')}, ${tcKey('healthy')}: ${tcBool('true')} ${tcPunct('}')}`
+    );
+    
+    executePhase2();
+  }, 3500));
+}
+
+/* ─── PHASE 2: Job Deployment & Performance Tuning ─── */
+const TUNING_STEPS_VALS = [
+  { batch: 50000,  threads: 4,  tput: 1820, label: 'B50k/T4'  },
+  { batch: 75000,  threads: 6,  tput: 2640, label: 'B75k/T6'  },
+  { batch: 100000, threads: 8,  tput: 3450, label: 'B100k/T8' },
+  { batch: 125000, threads: 10, tput: 4100, label: 'B125k/T10'},
+  { batch: 150000, threads: 12, tput: 4380, label: 'B150k/T12'},
+  { batch: 175000, threads: 14, tput: 4410, label: 'B175k/T14'}
+];
+const OPT_IDX = 4;
+
+function executePhase2() {
+  addSimTimer(setTimeout(() => {
+    setAgentActive('tuner');
+    addEvent('INFO', 'Performance Tuner active. Calibrating parallel batch write performance...');
+    
+    // Animate points
+    const tuneInterval = 1200;
+    TUNING_STEPS_VALS.forEach((step, idx) => {
+      addSimTimer(setTimeout(() => {
+        migState.batchSize = step.batch;
+        migState.threads = step.threads;
+        migState.throughput = step.tput;
+        
+        // Distribute load to active VMs
+        vms.forEach(vm => {
+          vm.cpu = Math.floor(40 + (idx * 8) + Math.random() * 5);
+          vm.tput = Math.floor(step.tput / 4);
+        });
+        updateAllVMs();
+        updateMetricsUI();
+        
+        addChartPoint(idx, step.tput, step.label, TUNING_STEPS_VALS.length);
+        
+        const isOptimal = (idx === OPT_IDX);
+        
+        updateAgentPanel(
+          isOptimal ? 'Optimal performance configuration locked. Plateau identified.' : `Auto-tuning batch concurrency to scale migration speed. testing bounds...`,
+          `${tcFn('configureVMPerformance')}${tcPunct('(')}${tcKey('batchSize')}: ${tcNum(step.batch)}, ${tcKey('threads')}: ${tcNum(step.threads)}${tcPunct(')')}`,
+          `${tcPunct('{')} ${tcKey('throughput')}: ${tcNum(step.tput)}, ${tcKey('gainRatio')}: ${tcNum( (step.tput / 1820).toFixed(2) )} ${tcPunct('}')}`
+        );
+        
+        if (isOptimal) {
+          showOptimalLine(step.tput, idxToX(OPT_IDX, TUNING_STEPS_VALS.length));
+          addEvent('OK', `OPTIMAL CONFIG DETECTED & LOCKED: Batch Size = 150k, Threads = 12 (Throughput = ${step.tput.toLocaleString()}/s).`);
+          document.getElementById('tuning-status-label').innerHTML = `<span style="color:var(--green);font-weight:bold;">🟢 PEAK THROUGHPUT LOCKED AT 4,380 docs/s (Batch: 150,000 | Threads: 12)</span>`;
+        } else {
+          addEvent('INFO', `Performance calibration at ${step.label} registers ${step.tput.toLocaleString()} documents/sec.`);
+        }
+      }, idx * tuneInterval));
+    });
+    
+    addSimTimer(setTimeout(() => {
+      // Revert from trial 6 back to optimal config
+      migState.batchSize = TUNING_STEPS_VALS[OPT_IDX].batch;
+      migState.threads = TUNING_STEPS_VALS[OPT_IDX].threads;
+      migState.throughput = TUNING_STEPS_VALS[OPT_IDX].tput;
+      vms.forEach(vm => {
+        vm.tput = Math.floor(migState.throughput / 4);
+        vm.cpu = 72;
+      });
+      updateAllVMs();
+      updateMetricsUI();
+      
+      executePhase3();
+    }, TUNING_STEPS_VALS.length * tuneInterval + 500));
+    
+  }, 1500));
+}
+
+/* ─── PHASE 3: Main Migration & Disk Storage Limit Event ─── */
+function executePhase3() {
+  setAgentActive('extractor');
+  addEvent('INFO', 'Performance tuning complete. Main migration ingestion engine fully active.');
+  addEvent('INFO', '4 worker VMs processing parallel data packet migration cycles.');
+  
+  let currentPct = 0;
+  
+  mainSimInterval = setInterval(() => {
+    // Normal progress update
+    currentPct += 5;
+    migState.progress = currentPct;
+    migState.migrated = Math.floor((migState.progress / 100) * migState.totalDocs);
+    
+    // Update document class progress
+    animateClassProgress(migState.progress);
+    
+    // Alternating Extraction & Ingestion status cycles across the 4 VMs
+    if (currentPct % 10 === 0) {
+      setAgentActive('extractor');
+    } else if (currentPct % 10 === 5) {
+      setAgentActive('ingester');
+    }
+
+    vms.forEach(vm => {
+      // Rotate stages to show both Extraction and Ingestion pathways actively running
+      const cycle = Math.floor(currentPct / 10);
+      const isExtracting = (cycle + vm.id) % 2 === 0;
+      
+      if (isExtracting) {
+        vm.status = 'active'; // EXTRACTING (FileNet -> VM Disk)
+        vm.tempFolderGb = Math.min(8.5, vm.tempFolderGb + 1.6);
+        vm.cpu = Math.floor(65 + Math.random() * 8);
+        vm.tput = Math.floor(migState.throughput / 4);
+      } else {
+        vm.status = 'ingesting'; // INGESTING (VM Disk -> AWS S3)
+        vm.tempFolderGb = Math.max(0.5, vm.tempFolderGb - 1.8);
+        vm.cpu = Math.floor(75 + Math.random() * 10);
+        vm.tput = Math.floor(migState.throughput / 4);
+      }
+    });
+    updateAllVMs();
+    updateMetricsUI();
+    
+    // Storage trigger on VM-3 at exactly 40% progress
+    if (currentPct === 40) {
+      clearInterval(mainSimInterval);
+      triggerStorageAlertEvent();
+    }
+  }, 500);
+}
+
+function animateClassProgress(totalPct) {
+  const keys = Object.keys(classProgress);
+  const speeds = [1.0, 0.95, 0.9, 0.85, 0.8];
+  keys.forEach((key, idx) => {
+    const val = Math.min(classTotals[key], Math.floor(classTotals[key] * (totalPct / 100) * speeds[idx]));
+    classProgress[key] = val;
+    
+    document.getElementById(`pb-${key.toLowerCase().replace('documents','').replace('records','').replace('logs','')}`).style.width = (val / classTotals[key]) * 100 + '%';
+    document.getElementById(`pc-${key}`).textContent = val.toLocaleString() + ' / ' + classTotals[key].toLocaleString();
+  });
+}
+
+/* ─── THE STORAGE HALT & SELF HEALING SIMULATION ─── */
+function triggerStorageAlertEvent() {
+  isRunning = false;
+  
+  document.getElementById('exec-status').className = 'status-badge badge-paused';
+  document.getElementById('exec-status').textContent = 'PAUSED - STORAGE';
+  
+  // Set VM-3 to critical paused state
+  const vm3 = vms.find(v => v.id === 3);
+  vm3.status = 'paused';
+  vm3.cpu = 10;
+  vm3.tput = 0;
+  vm3.tempFolderGb = 17.5; // push it above 10GB boundary limit
+  updateVMUI(3);
+  
+  // Drop total throughput because one VM is halted
+  migState.throughput = Math.floor(migState.throughput * 0.75);
+  updateMetricsUI();
+  
+  // Step 1: Storage Monitor detects capacity issue
+  setAgentActive('storage');
+  addEvent('WARN', '[CRITICAL ALERT] Local storage capacity is critically low on VM-3 (< 10 GB free space remaining). Disk write overflow protection triggered!');
+  addEvent('WARN', 'Storage Monitor Agent alerting Master Supervisor. Requesting immediate extraction suspension.');
+  
+  updateAgentPanel(
+    `[ALERT] disk-used: ${ (vm3.usedGb + vm3.tempFolderGb).toFixed(1) } GB. Safe boundary space hit on VM-3. Suspended JVM extraction processes.`,
+    `${tcFn('getDiskUsageTelemetry')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}${tcPunct(')')}`,
+    `${tcPunct('{')} ${tcKey('diskStatus')}: ${tcStr('CRITICAL')}, ${tcKey('freeGb')}: ${tcNum( (100.0 - (vm3.usedGb + vm3.tempFolderGb)).toFixed(1) )} ${tcPunct('}')}`
+  );
+  
+  // Step 2: Supervisor suspends VM-3 extraction and delegates to Error Resolver (2.5 seconds)
+  addSimTimer(setTimeout(() => {
+    setAgentActive('supervisor');
+    addEvent('INFO', '[Supervisor] Directing Extractor Agent to temporarily pause extraction jobs on VM-3 worker.');
+    addEvent('WARN', '[Supervisor] Storage deadlock detected. Handing off incident ticket to Error Resolver Agent for analysis and healing.');
+    
+    updateAgentPanel(
+      'Orchestrating recovery logic: Suspend extraction ➔ Delegate to Error Resolver Agent ➔ Flush cache ➔ Purge temporary files.',
+      `${tcFn('pauseVMExtraction')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}${tcPunct(')')}`,
+      `${tcPunct('{')} ${tcKey('extractionPaused')}: ${tcBool('true')}, ${tcKey('errorResolverHandoff')}: ${tcBool('true')} ${tcPunct('}')}`
+    );
+  }, 2500));
+  
+  // Step 3: Error Resolver diagnoses full partition and designs healing plan (5.0 seconds)
+  addSimTimer(setTimeout(() => {
+    setAgentActive('error');
+    addEvent('WARN', '[Error Resolver] Storage deadlock diagnosed. temp cache folder /var/tmp/Migration_Complete/ exceeds threshold limits.');
+    addEvent('INFO', '[Error Resolver] Prescribing heal protocol: flush residual binary streams to S3 target, then execute complete directory purge.');
+    
+    updateAgentPanel(
+      'Diagnosing disk full exception. Formulating self-healing script to complete active queue uploads and release local space.',
+      `${tcFn('analyzeError')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}, ${tcKey('errorCode')}: ${tcStr('DISK_FULL_10GB')}${tcPunct(')')}`,
+      `${tcPunct('{')} ${tcKey('diagnosed')}: ${tcStr('VM3_DISK_FULL')}, ${tcKey('action')}: ${tcStr('FLUSH_AND_PURGE')}, ${tcKey('severity')}: ${tcStr('HIGH')} ${tcPunct('}')}`
+    );
+  }, 5000));
+  
+  // Step 4: Ingester Agent flushes residuals to AWS S3 (7.5 seconds)
+  addSimTimer(setTimeout(() => {
+    setAgentActive('ingester');
+    vm3.status = 'ingesting';
+    vm3.cpu = 88;
+    vm3.tput = 1600; // heavy upload
+    updateVMUI(3);
+    
+    addEvent('INFO', 'Ingester Agent focusing processes on VM-3 to complete current batch upload to S3.');
+    
+    updateAgentPanel(
+      'Uploading residual binary streams from local disk buffer of VM-3 to AWS S3. Optimizing WAN writing queues.',
+      `${tcFn('uploadLocalCacheToTarget')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}${tcPunct(')')}`,
+      `${tcPunct('{')} ${tcKey('uploadComplete')}: ${tcBool('true')}, ${tcKey('objectsWritten')}: ${tcNum('75000')}, ${tcKey('deltaCount')}: ${tcNum('0')} ${tcPunct('}')}`
+    );
+  }, 7500));
+
+  // Step 5: Error Resolver executes purging command (10.0 seconds)
+  addSimTimer(setTimeout(() => {
+    setAgentActive('error');
+    vm3.status = 'cleaning';
+    vm3.cpu = 30;
+    vm3.tput = 0;
+    updateVMUI(3);
+    
+    addEvent('OK', '[Error Resolver] VM-3 batch ingestion confirmed. Invoking self-healing purge() on directory `/var/tmp/Migration_Complete/`.');
+    
+    updateAgentPanel(
+      'Purging temporary ingestion directory after verified write handshake. Freeing file cluster sectors.',
+      `${tcFn('deleteFolder')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}, ${tcKey('directory')}: ${tcStr('Migration_Complete')}${tcPunct(')')}`,
+      `${tcPunct('{')} ${tcKey('directoryDeleted')}: ${tcBool('true')}, ${tcKey('storageFreed')}: ${tcNum(vm3.tempFolderGb.toFixed(1))} ${tcDim('GB')} ${tcPunct('}')}`
+    );
+    
+    // Wipe folder Gb!
+    vm3.tempFolderGb = 0;
+  }, 10000));
+  
+  // Step 6: Storage Monitor checks health post-cleanup (12.5 seconds)
+  addSimTimer(setTimeout(() => {
+    setAgentActive('storage');
+    addEvent('OK', `Disk partition cleaned successfully. VM-3 current free storage: ${(100.0 - vm3.usedGb).toFixed(1)} GB. Capacity verified healthy.`);
+    
+    updateAgentPanel(
+      'Post-cleanup disk check. VM-3 disk volume conforms to safe bounds.',
+      `${tcFn('getDiskUsageTelemetry')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}${tcPunct(')')}`,
+      `${tcPunct('{')} ${tcKey('diskStatus')}: ${tcStr('HEALTHY')}, ${tcKey('freeGb')}: ${tcNum((100.0 - vm3.usedGb).toFixed(1))} ${tcPunct('}')}`
+    );
+    
+    vm3.status = 'active';
+    vm3.cpu = 72;
+    vm3.tput = Math.floor(4380 / 4);
+    updateVMUI(3);
+  }, 12500));
+  
+  // Step 7: Supervisor resumes operations (15.0 seconds)
+  addSimTimer(setTimeout(() => {
+    setAgentActive('supervisor');
+    document.getElementById('exec-status').className = 'status-badge badge-running';
+    document.getElementById('exec-status').textContent = 'RUNNING';
+    
+    addEvent('OK', 'Supervisor Agent confirming node healing. Resuming extraction on VM-3 worker.');
+    migState.healed++;
+    migState.throughput = 4380;
+    isRunning = true;
+    updateMetricsUI();
+    
+    updateAgentPanel(
+      'All node workers verified active. Resuming cluster operations at tuned concurrency configurations.',
+      `${tcFn('resumeVMExtraction')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}${tcPunct(')')}`,
+      `${tcPunct('{')} ${tcKey('extractionResumed')}: ${tcBool('true')}, ${tcKey('clusterStatus')}: ${tcStr('HEALTHY')} ${tcPunct('}')}`
+    );
+    
+    // Resume progress ticks
+    let currentPct = 40;
+    setAgentActive('extractor');
+    
+    mainSimInterval = setInterval(() => {
+      currentPct += 5;
+      migState.progress = currentPct;
+      migState.migrated = Math.floor((migState.progress / 100) * migState.totalDocs);
+      
+      animateClassProgress(currentPct);
+      
+      // Alternating Extraction & Ingestion status cycles across the 4 VMs post-healing
+      if (currentPct % 10 === 0) {
+        setAgentActive('extractor');
+      } else if (currentPct % 10 === 5) {
+        setAgentActive('ingester');
+      }
+
+      vms.forEach(vm => {
+        const cycle = Math.floor(currentPct / 10);
+        const isExtracting = (cycle + vm.id) % 2 === 0;
+        
+        if (isExtracting) {
+          vm.status = 'active';
+          vm.tempFolderGb = Math.min(8.5, vm.tempFolderGb + 1.2);
+          vm.cpu = Math.floor(65 + Math.random() * 8);
+          vm.tput = Math.floor(migState.throughput / 4);
+        } else {
+          vm.status = 'ingesting';
+          vm.tempFolderGb = Math.max(0.5, vm.tempFolderGb - 1.5);
+          vm.cpu = Math.floor(75 + Math.random() * 10);
+          vm.tput = Math.floor(migState.throughput / 4);
+        }
+      });
+      updateAllVMs();
+      updateMetricsUI();
+      
+      // Completion check
+      if (currentPct >= 100) {
+        clearInterval(mainSimInterval);
+        executeReconciliation();
+      }
+    }, 500);
+  }, 15000));
+}
+
+/* ─── PHASE 4: Completion & Reconciliation ─── */
+function executeReconciliation() {
+  isRunning = false;
+  document.getElementById('exec-status').className = 'status-badge badge-done';
+  document.getElementById('exec-status').textContent = 'COMPLETE';
+  
+  // Shut down VM loads
+  vms.forEach(vm => {
+    vm.status = 'offline';
+    vm.cpu = 0;
+    vm.tput = 0;
+    vm.tempFolderGb = 0;
+  });
+  updateAllVMs();
+  
+  setAgentActive('supervisor');
+  addEvent('DONE', 'All 350,000 files successfully migrated from source repositories to AWS S3 bucket.');
+  addEvent('DONE', 'Master Supervisor calling Reconciliation Agent to run integrity checksum validations.');
+  
+  addSimTimer(setTimeout(() => {
+    setAgentActive('scheduler'); // Let scheduler confirm grace shut down
+    addEvent('OK', 'Reconciliation Agent running metadata checksum verifications...');
+    
+    updateAgentPanel(
+      'Comparing FileNet P8 row-counts against S3 object lists. Compiling SHA-256 hash match metrics.',
+      `${tcFn('executeChecksumVerification')}${tcPunct('(')}${tcKey('sessionId')}: ${tcStr('MIG-20260528-001')}${tcPunct(')')}`,
+      `${tcPunct('{')}\n  ${tcKey('sourceCount')}: ${tcNum('350000')},\n  ${tcKey('targetCount')}: ${tcNum('350000')},\n  ${tcKey('matchedPercent')}: ${tcNum('100')}${tcDim('%')},\n  ${tcKey('deltaCount')}: ${tcNum('0')}\n${tcPunct('}')}`
+    );
+    
+    addEvent('OK', 'Reconciliation successful! 350,000 documents matched. Delta = 0. SHA-256 signatures 100% verified.');
+    addEvent('DONE', 'Daily client report generated. Ready to email before 6:00 PM deadline.');
+    
+    // Enable Report Button
+    document.getElementById('report-btn').disabled = false;
+    document.getElementById('start-btn').disabled = false;
+    
+    generateDailyEmail();
+  }, 2000));
+}
+
+function forceStopDueToWindowClose() {
+  clearAllTimers();
+  isRunning = false;
+  document.getElementById('exec-status').className = 'status-badge badge-idle';
+  document.getElementById('exec-status').textContent = 'STOPPED';
+  
+  vms.forEach(vm => {
+    vm.status = 'offline';
+    vm.cpu = 0;
+    vm.tput = 0;
+  });
+  updateAllVMs();
+  
+  setAgentActive('scheduler');
+  addEvent('WARN', 'Migration window closed! Performing graceful VM shutdown and saving execution checkpoints.');
+  updateAgentPanel(
+    'Migration window closed. Save checkpoint indexes and power off VM container workers.',
+    `${tcFn('gracefulShutdownCluster')}${tcPunct('()')}`,
+    `${tcPunct('{')} ${tcKey('checkpointSaved')}: ${tcBool('true')}, ${tcKey('lastDocumentId')}: ${tcStr('DOC-2026-1942')} ${tcPunct('}')}`
+  );
+  
+  document.getElementById('start-btn').disabled = false;
+}
+
+function updateMetricsUI() {
+  document.getElementById('exec-status').className = isRunning ? 'status-badge badge-running' : 'status-badge badge-idle';
+  if (isRunning) {
+    document.getElementById('exec-status').textContent = 'RUNNING';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REPORT & MODAL INTERACTIVE CONTROLS
+   ═══════════════════════════════════════════════════════════════ */
+function generateDailyEmail() {
+  const dStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const content = `
+    <div style="font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; color: #1e293b; max-width: 550px; margin: 0 auto;">
+      <h2 style="color: #1a56d6; margin-top: 0; font-size: 18px; border-bottom: 2px solid #eff6ff; padding-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span>✦</span> AutoMigrate AI — Daily Migration Summary
+      </h2>
+      <p style="font-size: 13px; line-height: 1.5; color: #475569;">
+        Hello Operations Team,
+      </p>
+      <p style="font-size: 13px; line-height: 1.5; color: #475569;">
+        Here is the daily automated reconciliation report compiled by the <strong>Autonomous Migration Agents</strong> for the session <strong>MIG-20260528-001</strong>. All active workers successfully closed their pipelines and validated checksum structures.
+      </p>
+      
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin: 18px 0;">
+        <h4 style="margin: 0 0 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Execution Parameters</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Source System:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right;">IBM FileNet P8 Repository</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Target Endpoint:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right;">Amazon S3 (rp-migration)</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Tuned Batch Size:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #1a56d6;">150,000 / Batch</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Tuned Thread Pool:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #1a56d6;">12 Threads / VM</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Peak Network Speed:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #16a34a;">4,380 docs/sec</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Total Migrated:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #16a34a;">350,000 / 350,000 docs (100%)</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Errors Encounted:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #dc2626;">1 Low Storage Warning</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #64748b;">Self-Healed Resolves:</td>
+            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #7c3aed;">1 Purge cache (Wipe complete)</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 12px; margin-bottom: 18px;">
+        <span style="font-weight: 700; color: #065f46; font-size: 12.5px;">✓ Storage Self-Healing Verification</span>
+        <p style="margin: 4px 0 0; font-size: 11.5px; color: #065f46; line-height: 1.4;">
+          Storage Monitor Agent successfully captured disk capacity limit on VM-3 (<10GB free). Extractor automatically paused, Ingester concluded upload, and <code>Migration_Complete</code> cache folder was purged, freeing 52 GB without operational interruption.
+        </p>
+      </div>
+
+      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 15px 0 0; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+        Sent automatically by AutoMigrate AI Agent Framework at ${now()}
+      </p>
+    </div>
+  `;
+  
+  document.getElementById('email-body-content').innerHTML = content;
+}
+
+function openEmailReport() {
+  document.getElementById('report-modal').classList.add('open');
+}
+
+function closeEmailReport() {
+  document.getElementById('report-modal').classList.remove('open');
+}
+
+function simulateEmailSend() {
+  alert("Report emailed successfully to Client Operations and Stakeholders! Checksum logs attached.");
+  closeEmailReport();
+}
+
+function copyEmailHTML() {
+  const emailContent = document.getElementById("email-body-content").innerHTML;
+  navigator.clipboard.writeText(emailContent).then(() => {
+    alert("Email HTML copied to clipboard! You can paste this directly into any HTML email editor.");
+  }).catch(err => {
+    console.error("Failed to copy clipboard: ", err);
+  });
+}
+
+function openInMailClient() {
+  const dStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const subject = encodeURIComponent(`RapidPro Daily Migration Status - ${dStr}`);
+  const bodyText = encodeURIComponent(
+    `Dear Client Operations Team,\n\n` +
+    `This is an automated status report generated by the Rapidpro Agentic AI Orchestrator.\n\n` +
+    `MIGRATION SUMMARY:\n` +
+    `- Source System: IBM FileNet P8 Repository\n` +
+    `- Target Endpoint: Amazon S3 (rp-migration)\n` +
+    `- Peak Speed: 4,380 docs/sec\n` +
+    `- Status: 100% Complete (350,000 / 350,000 docs)\n` +
+    `- Errors: 0 outstanding (1 low-storage warning resolved)\n` +
+    `- Data Integrity: 100% Verified (SHA-256 matches)\n\n` +
+    `The worker VM assets have been successfully scaled down to optimize network and compute budgets.\n\n` +
+    `Best Regards,\n` +
+    `Rapidpro AI Operations Agent`
+  );
+  window.location.href = `mailto:client-ops@rapidpro.com?subject=${subject}&body=${bodyText}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INITIALIZATION
+   ═══════════════════════════════════════════════════════════════ */
+startCountdown();
+updateAllVMs();
+</script>
+</body>
+</html>
