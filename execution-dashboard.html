@@ -718,8 +718,8 @@ input, select, button { font-family: inherit; }
 }
 .modal-overlay.open { opacity: 1; pointer-events: auto; }
 .modal-card {
-  width: 600px;
-  max-width: 90%;
+  width: 950px;
+  max-width: 95%;
   background: var(--white);
   border-radius: 12px;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
@@ -727,35 +727,37 @@ input, select, button { font-family: inherit; }
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  max-height: 85vh;
+  max-height: 90vh;
   transform: scale(0.95);
   transition: transform 0.3s ease;
 }
 .modal-overlay.open .modal-card { transform: scale(1); }
 .modal-header {
-  padding: 16px 20px;
+  padding: 14px 20px;
   background: var(--white);
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 .modal-title { font-size: 14px; font-weight: 800; color: var(--text); }
 .close-modal-btn {
   background: transparent; border: none; font-size: 18px; color: var(--muted); cursor: pointer;
 }
 .modal-body {
-  padding: 20px;
-  overflow-y: auto;
+  padding: 0;
+  overflow: hidden;
   background: #f8fafc;
 }
 .modal-footer {
-  padding: 14px 20px;
+  padding: 12px 20px;
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 /* SVG Agent Graph styles */
 .graph-node circle {
@@ -1260,11 +1262,88 @@ input, select, button { font-family: inherit; }
 <div class="modal-overlay" id="report-modal">
   <div class="modal-card">
     <div class="modal-header">
-      <div class="modal-title">✉️ Synthesized Daily Status Report (Ready to Email)</div>
+      <div class="modal-title">✉️ Synthesized Daily Status Report Compiler (Multi-Agent Synthesized)</div>
       <button class="close-modal-btn" onclick="closeEmailReport()">×</button>
     </div>
-    <div class="modal-body" id="email-body-content">
-      <!-- Generated Report Content goes here -->
+    <div class="modal-body" style="padding: 0; display: flex; height: 68vh; min-height: 480px;">
+      <!-- Left Side: Configuration & Controls (360px wide) -->
+      <div class="email-compiler-controls" style="width: 360px; flex-shrink: 0; background: #ffffff; border-right: 1px solid #e2e8f0; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto;">
+        <div style="background: #eff6ff; border: 1px solid rgba(26,86,214,0.15); border-radius: 6px; padding: 10px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🤖</span>
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #1a56d6;">REPORT AGENT IS COMPILING</div>
+            <div style="font-size: 9.5px; color: #64748b;">Dynamically customizing synthesis variables</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" style="font-size: 10.5px;">Recipient Email</label>
+          <input type="text" class="form-input" id="email-to" value="client-ops@rapidpro.com" oninput="triggerAiSynthesis()" style="height:30px; font-size:11.5px;" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 10.5px;">CC Email</label>
+          <input type="text" class="form-input" id="email-cc" value="stakeholders@rapidpro.com" oninput="triggerAiSynthesis()" style="height:30px; font-size:11.5px;" />
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" style="font-size: 10.5px;">Subject Line</label>
+          <input type="text" class="form-input" id="email-subject" value="RapidPro Daily Migration Status - Session MIG-20260528-001" oninput="triggerAiSynthesis()" style="height:30px; font-size:11.5px;" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 10.5px;">Synthesis Report Tone</label>
+          <select class="form-select" id="email-tone" onchange="triggerAiSynthesis()" style="height:30px; font-size:11.5px; padding: 0 8px; border: 1px solid #cbd5e1; background: #fff;">
+            <option value="executive" selected>👔 Executive Summary (Focus on SLAs, ROI & healing)</option>
+            <option value="technical">💻 Technical Deep-Dive (Specs, VM loads, CPU & checks)</option>
+            <option value="incident">🔧 Incident & Recovery (Self-healing details)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 10.5px;">Add Custom Notes / Remarks</label>
+          <textarea class="form-input" id="email-notes" oninput="triggerAiSynthesis()" style="height: 75px; font-size: 11px; padding: 6px 10px; resize: none; line-height: 1.4; border: 1px solid #cbd5e1; background: #fff;" placeholder="Type custom notes here (e.g. Migration completed 10 minutes ahead of scheduled window limit...)"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size: 10.5px;">Include Report Exhibits</label>
+          <div style="display:flex; flex-direction:column; gap:5px; margin-top:2px;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#475569; cursor:pointer; font-weight:500;">
+              <input type="checkbox" id="attach-checksum" checked onchange="triggerAiSynthesis()" style="accent-color:#1a56d6;" />
+              SHA-256 Count Reconciliation
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#475569; cursor:pointer; font-weight:500;">
+              <input type="checkbox" id="attach-tuning" checked onchange="triggerAiSynthesis()" style="accent-color:#1a56d6;" />
+              Performance scaling parameters
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#475569; cursor:pointer; font-weight:500;">
+              <input type="checkbox" id="attach-telemetry" onchange="triggerAiSynthesis()" style="accent-color:#1a56d6;" />
+              Raw VM Telemetry reports
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side: Rendered Email Live Preview -->
+      <div class="email-preview-pane" style="flex: 1; background: #f1f5f9; padding: 16px; display: flex; flex-direction: column; overflow: hidden; position: relative;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-shrink: 0;">
+          <span style="font-weight: 700; font-size: 10.5px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Live HTML Preview Inbox</span>
+          <span id="synthesis-badge" style="font-size: 9px; font-weight: 800; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; display: none;">⚡ REPORT AGENT COMPILING...</span>
+        </div>
+
+        <!-- Live Render Area -->
+        <div id="email-body-content" style="flex: 1; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); position: relative;">
+          <!-- Content injected by JS -->
+        </div>
+
+        <!-- AI Synthesis Pulsing Overlay -->
+        <div id="synthesis-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(241,245,249,0.75); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 10; border-radius:0 0 8px 0;">
+          <div style="background: white; border: 1px solid rgba(26,86,214,0.12); border-radius: 8px; padding: 14px 22px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px;">
+            <div class="spinner" style="width:14px; height:14px; border-width:2px; border-top-color:#1a56d6;"></div>
+            <span style="font-weight:700; font-size:12px; color:#1e40af;">Agent synthesizing layout...</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="secondary-btn" style="height:32px; font-size:11px; padding:0 12px; margin-right:4px;" onclick="closeEmailReport()">Close Preview</button>
@@ -1568,6 +1647,15 @@ function updateVMUI(id) {
   card.className = 'vm-card';
   statusBadge.className = 'vm-status-badge';
   
+  const nameEl = card.querySelector('.vm-name');
+  if (vm.status === 'offline') {
+    nameEl.innerHTML = `VM-${id} (worker-prod-0${id})`;
+  } else if (vm.activeJob && vm.activeJob !== 'None') {
+    nameEl.innerHTML = `VM-${id} <span style="font-size:9.5px;color:var(--blue);background:var(--blue-light);padding:2px 6px;border-radius:4px;font-weight:700;margin-left:6px;border:1px solid rgba(26,86,214,0.12);">${vm.activeJob}</span>`;
+  } else {
+    nameEl.innerHTML = `VM-${id} (worker-prod-0${id})`;
+  }
+  
   // Status mapping
   if (vm.status === 'offline') {
     statusBadge.textContent = 'OFFLINE';
@@ -1787,6 +1875,9 @@ function startAutonomousFlow() {
     vm.tput = 0;
     vm.tempFolderGb = 0;
     vm.usedGb = Math.floor(Math.random() * 20) + 30; // base used disk between 30-50GB
+    // Assign initial set of 4 jobs to the 4 VMs
+    const initialJobs = ['LoanDocuments', 'InvoiceRecords', 'Contracts', 'PolicyDocuments'];
+    vm.activeJob = initialJobs[vm.id - 1];
   });
   updateAllVMs();
 
@@ -1819,7 +1910,7 @@ function executePhase1() {
       vm.cpu = 15;
     });
     updateAllVMs();
-  }, 1500));
+  }, 200));
 
   addSimTimer(setTimeout(() => {
     setAgentActive('storage');
@@ -1836,7 +1927,7 @@ function executePhase1() {
     );
     
     executePhase2();
-  }, 3500));
+  }, 600));
 }
 
 /* ─── PHASE 2: Job Deployment & Performance Tuning ─── */
@@ -1856,7 +1947,7 @@ function executePhase2() {
     addEvent('INFO', 'Performance Tuner active. Calibrating parallel batch write performance...');
     
     // Animate points
-    const tuneInterval = 1200;
+    const tuneInterval = 300;
     TUNING_STEPS_VALS.forEach((step, idx) => {
       addSimTimer(setTimeout(() => {
         migState.batchSize = step.batch;
@@ -1904,9 +1995,9 @@ function executePhase2() {
       updateMetricsUI();
       
       executePhase3();
-    }, TUNING_STEPS_VALS.length * tuneInterval + 500));
+    }, TUNING_STEPS_VALS.length * tuneInterval + 100));
     
-  }, 1500));
+  }, 200));
 }
 
 /* ─── PHASE 3: Main Migration & Disk Storage Limit Event ─── */
@@ -1926,22 +2017,49 @@ function executePhase3() {
   
   mainSimInterval = setInterval(() => {
     // Normal progress update
-    currentPct += 5;
+    currentPct += 4;
     migState.progress = currentPct;
     migState.migrated = Math.floor((migState.progress / 100) * migState.totalDocs);
     
-    // Update document class progress
+    // Update document class progress sequentially
     animateClassProgress(migState.progress);
     
+    // Staging Job dispatching: swap VM-4 to next queue set when PolicyDocuments finishes
+    if (currentPct === 48 && vms[3].activeJob === 'PolicyDocuments') {
+      vms[3].status = 'cleaning';
+      vms[3].cpu = 35;
+      vms[3].tput = 0;
+      updateVMUI(4);
+      addEvent('DONE', '[Supervisor] VM-4 completed staging job PolicyDocuments (45,800 docs). Ingestion verified.');
+      addEvent('INFO', '[Job Planner] Scanning queue for next staged work allocation...');
+      updateAgentPanel(
+        'Queue allocation check. Scheduling next job from outstanding list.',
+        `${tcFn('getJobQueueStatus')}${tcPunct('()')}`,
+        `${tcPunct('{')} ${tcKey('nextJob')}: ${tcStr('AuditLogs')}, ${tcKey('docsCount')}: ${tcNum('22600')}, ${tcKey('targetWorker')}: ${tcStr('VM-4')} ${tcPunct('}')}`
+      );
+    } else if (currentPct === 52 && vms[3].activeJob === 'PolicyDocuments') {
+      vms[3].activeJob = 'AuditLogs';
+      vms[3].status = 'active';
+      vms[3].cpu = 72;
+      vms[3].tput = Math.floor(migState.throughput / 4);
+      updateVMUI(4);
+      addEvent('OK', '[Supervisor] Dispatching next job in queue: AuditLogs (22,600 docs) to VM-4 worker.');
+      updateAgentPanel(
+        'Deploying new extraction job AuditLogs to VM-4 worker node.',
+        `${tcFn('deployMigrationJob')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-4')}, ${tcKey('class')}: ${tcStr('AuditLogs')}${tcPunct(')')}`,
+        `${tcPunct('{')} ${tcKey('jobId')}: ${tcStr('J005')}, ${tcKey('status')}: ${tcStr('EXTRACTING')} ${tcPunct('}')}`
+      );
+    }
+    
     // Alternating Extraction & Ingestion status cycles across the 4 VMs
-    if (currentPct % 10 === 0) {
+    if (currentPct % 8 === 0) {
       setAgentActive('extractor');
       updateAgentPanel(
         'Orchestrating distributed extraction jobs. Worker VMs pulling documents from IBM FileNet source partition buffers to local staging partitions.',
         `${tcFn('extractBatchFromSource')}${tcPunct('(')}${tcKey('batchSize')}: ${tcNum('150000')}${tcPunct(')')}`,
         `${tcPunct('{')} ${tcKey('activeExtractions')}: ${tcNum('4')}, ${tcKey('bytesRead')}: ${tcStr('45.0 GB')} ${tcPunct('}')}`
       );
-    } else if (currentPct % 10 === 5) {
+    } else if (currentPct % 8 === 4) {
       setAgentActive('ingester');
       updateAgentPanel(
         'Orchestrating target ingestion tasks. Worker VMs uploading completed staging partitions to Amazon S3 bucket target.',
@@ -1949,20 +2067,33 @@ function executePhase3() {
         `${tcPunct('{')} ${tcKey('activeUploads')}: ${tcNum('4')}, ${tcKey('bytesWritten')}: ${tcStr('52.0 GB')}, ${tcKey('s3Response')}: ${tcStr('200_OK')} ${tcPunct('}')}`
       );
     }
-
     vms.forEach(vm => {
       // Rotate stages to show both Extraction and Ingestion pathways actively running
-      const cycle = Math.floor(currentPct / 10);
+      const cycle = Math.floor(currentPct / 8);
       const isExtracting = (cycle + vm.id) % 2 === 0;
+      
+      if (vm.id === 3 && vm.status === 'paused') {
+        // Keep VM-3 paused during the alert event
+        return;
+      }
+      
+      if (vm.id === 4 && currentPct === 48) {
+        // Protect VM-4 during cleaning transition
+        vm.status = 'cleaning';
+        vm.cpu = 35;
+        vm.tput = 0;
+        vm.tempFolderGb = 0;
+        return;
+      }
       
       if (isExtracting) {
         vm.status = 'active'; // EXTRACTING (FileNet -> VM Disk)
-        vm.tempFolderGb = Math.min(8.5, vm.tempFolderGb + 1.6);
+        vm.tempFolderGb = Math.min(8.5, vm.tempFolderGb + 1.2);
         vm.cpu = Math.floor(65 + Math.random() * 8);
         vm.tput = Math.floor(migState.throughput / 4);
       } else {
         vm.status = 'ingesting'; // INGESTING (VM Disk -> AWS S3)
-        vm.tempFolderGb = Math.max(0.5, vm.tempFolderGb - 1.8);
+        vm.tempFolderGb = Math.max(0.5, vm.tempFolderGb - 1.4);
         vm.cpu = Math.floor(75 + Math.random() * 10);
         vm.tput = Math.floor(migState.throughput / 4);
       }
@@ -1975,7 +2106,7 @@ function executePhase3() {
       clearInterval(mainSimInterval);
       triggerStorageAlertEvent();
     }
-  }, 500);
+  }, 300);
 }
 
 function animateClassProgress(totalPct) {
@@ -2029,7 +2160,7 @@ function triggerStorageAlertEvent() {
     `${tcPunct('{')} ${tcKey('diskStatus')}: ${tcStr('CRITICAL')}, ${tcKey('freeGb')}: ${tcNum( (100.0 - (vm3.usedGb + vm3.tempFolderGb)).toFixed(1) )} ${tcPunct('}')}`
   );
   
-  // Step 2: Supervisor suspends VM-3 extraction and delegates to Error Resolver (2.5 seconds)
+  // Step 2: Supervisor suspends VM-3 extraction and delegates to Error Resolver (0.6 seconds)
   addSimTimer(setTimeout(() => {
     setAgentActive('supervisor');
     addEvent('INFO', '[Supervisor] Directing Extractor Agent to temporarily pause extraction jobs on VM-3 worker.');
@@ -2040,9 +2171,9 @@ function triggerStorageAlertEvent() {
       `${tcFn('pauseVMExtraction')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}${tcPunct(')')}`,
       `${tcPunct('{')} ${tcKey('extractionPaused')}: ${tcBool('true')}, ${tcKey('errorResolverHandoff')}: ${tcBool('true')} ${tcPunct('}')}`
     );
-  }, 2500));
+  }, 600));
   
-  // Step 3: Error Resolver diagnoses full partition and designs healing plan (5.0 seconds)
+  // Step 3: Error Resolver diagnoses full partition and designs healing plan (1.2 seconds)
   addSimTimer(setTimeout(() => {
     setAgentActive('error');
     addEvent('WARN', '[Error Resolver] Storage deadlock diagnosed. temp cache folder /var/tmp/Migration_Complete/ exceeds threshold limits.');
@@ -2053,9 +2184,9 @@ function triggerStorageAlertEvent() {
       `${tcFn('analyzeError')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}, ${tcKey('errorCode')}: ${tcStr('DISK_FULL_10GB')}${tcPunct(')')}`,
       `${tcPunct('{')} ${tcKey('diagnosed')}: ${tcStr('VM3_DISK_FULL')}, ${tcKey('action')}: ${tcStr('FLUSH_AND_PURGE')}, ${tcKey('severity')}: ${tcStr('HIGH')} ${tcPunct('}')}`
     );
-  }, 5000));
+  }, 1200));
   
-  // Step 4: Ingester Agent flushes residuals to AWS S3 (7.5 seconds)
+  // Step 4: Ingester Agent flushes residuals to AWS S3 (1.8 seconds)
   addSimTimer(setTimeout(() => {
     setAgentActive('ingester');
     vm3.status = 'ingesting';
@@ -2070,9 +2201,9 @@ function triggerStorageAlertEvent() {
       `${tcFn('uploadLocalCacheToTarget')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-3')}${tcPunct(')')}`,
       `${tcPunct('{')} ${tcKey('uploadComplete')}: ${tcBool('true')}, ${tcKey('objectsWritten')}: ${tcNum('75000')}, ${tcKey('deltaCount')}: ${tcNum('0')} ${tcPunct('}')}`
     );
-  }, 7500));
+  }, 1800));
 
-  // Step 5: Error Resolver executes purging command (10.0 seconds)
+  // Step 5: Error Resolver executes purging command (2.4 seconds)
   addSimTimer(setTimeout(() => {
     setAgentActive('error');
     vm3.status = 'cleaning';
@@ -2090,9 +2221,9 @@ function triggerStorageAlertEvent() {
     
     // Wipe folder Gb!
     vm3.tempFolderGb = 0;
-  }, 10000));
+  }, 2400));
   
-  // Step 6: Storage Monitor checks health post-cleanup (12.5 seconds)
+  // Step 6: Storage Monitor checks health post-cleanup (3.0 seconds)
   addSimTimer(setTimeout(() => {
     setAgentActive('storage');
     addEvent('OK', `Disk partition cleaned successfully. VM-3 current free storage: ${(100.0 - vm3.usedGb).toFixed(1)} GB. Capacity verified healthy.`);
@@ -2107,9 +2238,9 @@ function triggerStorageAlertEvent() {
     vm3.cpu = 72;
     vm3.tput = Math.floor(4380 / 4);
     updateVMUI(3);
-  }, 12500));
+  }, 3000));
   
-  // Step 7: Supervisor resumes operations (15.0 seconds)
+  // Step 7: Supervisor resumes operations (3.6 seconds)
   addSimTimer(setTimeout(() => {
     setAgentActive('supervisor');
     document.getElementById('exec-status').className = 'status-badge badge-running';
@@ -2132,21 +2263,48 @@ function triggerStorageAlertEvent() {
     setAgentActive('extractor');
     
     mainSimInterval = setInterval(() => {
-      currentPct += 5;
+      currentPct += 4;
       migState.progress = currentPct;
       migState.migrated = Math.floor((migState.progress / 100) * migState.totalDocs);
       
       animateClassProgress(currentPct);
       
+      // Staging Job dispatching: swap VM-4 to next queue set when PolicyDocuments finishes post-healing
+      if (currentPct === 48 && vms[3].activeJob === 'PolicyDocuments') {
+        vms[3].status = 'cleaning';
+        vms[3].cpu = 35;
+        vms[3].tput = 0;
+        updateVMUI(4);
+        addEvent('DONE', '[Supervisor] VM-4 completed staging job PolicyDocuments (45,800 docs). Ingestion verified.');
+        addEvent('INFO', '[Job Planner] Scanning queue for next staged work allocation...');
+        updateAgentPanel(
+          'Queue allocation check. Scheduling next job from outstanding list.',
+          `${tcFn('getJobQueueStatus')}${tcPunct('()')}`,
+          `${tcPunct('{')} ${tcKey('nextJob')}: ${tcStr('AuditLogs')}, ${tcKey('docsCount')}: ${tcNum('22600')}, ${tcKey('targetWorker')}: ${tcStr('VM-4')} ${tcPunct('}')}`
+        );
+      } else if (currentPct === 52 && vms[3].activeJob === 'PolicyDocuments') {
+        vms[3].activeJob = 'AuditLogs';
+        vms[3].status = 'active';
+        vms[3].cpu = 72;
+        vms[3].tput = Math.floor(migState.throughput / 4);
+        updateVMUI(4);
+        addEvent('OK', '[Supervisor] Dispatching next job in queue: AuditLogs (22,600 docs) to VM-4 worker.');
+        updateAgentPanel(
+          'Deploying new extraction job AuditLogs to VM-4 worker node.',
+          `${tcFn('deployMigrationJob')}${tcPunct('(')}${tcKey('vmId')}: ${tcStr('VM-4')}, ${tcKey('class')}: ${tcStr('AuditLogs')}${tcPunct(')')}`,
+          `${tcPunct('{')} ${tcKey('jobId')}: ${tcStr('J005')}, ${tcKey('status')}: ${tcStr('EXTRACTING')} ${tcPunct('}')}`
+        );
+      }
+      
       // Alternating Extraction & Ingestion status cycles across the 4 VMs post-healing
-      if (currentPct % 10 === 0) {
+      if (currentPct % 8 === 0) {
         setAgentActive('extractor');
         updateAgentPanel(
           'Resuming parallel extraction operations. Worker VMs actively streaming data chunks from IBM FileNet DB store to VM disks.',
           `${tcFn('extractBatchFromSource')}${tcPunct('(')}${tcKey('batchSize')}: ${tcNum('150000')}${tcPunct(')')}`,
           `${tcPunct('{')} ${tcKey('extractionsActive')}: ${tcNum('4')}, ${tcKey('healedNode')}: ${tcStr('VM-3')} ${tcPunct('}')}`
         );
-      } else if (currentPct % 10 === 5) {
+      } else if (currentPct % 8 === 4) {
         setAgentActive('ingester');
         updateAgentPanel(
           'Uploading verified staged assets to AWS S3 container storage. Scaling concurrent threads up to target WAN boundaries.',
@@ -2156,9 +2314,18 @@ function triggerStorageAlertEvent() {
       }
 
       vms.forEach(vm => {
-        const cycle = Math.floor(currentPct / 10);
+        const cycle = Math.floor(currentPct / 8);
         const isExtracting = (cycle + vm.id) % 2 === 0;
         
+        if (vm.id === 4 && currentPct === 48) {
+          // Protect VM-4 during cleaning transition
+          vm.status = 'cleaning';
+          vm.cpu = 35;
+          vm.tput = 0;
+          vm.tempFolderGb = 0;
+          return;
+        }
+
         if (isExtracting) {
           vm.status = 'active';
           vm.tempFolderGb = Math.min(8.5, vm.tempFolderGb + 1.2);
@@ -2166,7 +2333,7 @@ function triggerStorageAlertEvent() {
           vm.tput = Math.floor(migState.throughput / 4);
         } else {
           vm.status = 'ingesting';
-          vm.tempFolderGb = Math.max(0.5, vm.tempFolderGb - 1.5);
+          vm.tempFolderGb = Math.max(0.5, vm.tempFolderGb - 1.4);
           vm.cpu = Math.floor(75 + Math.random() * 10);
           vm.tput = Math.floor(migState.throughput / 4);
         }
@@ -2179,8 +2346,8 @@ function triggerStorageAlertEvent() {
         clearInterval(mainSimInterval);
         executeReconciliation();
       }
-    }, 500);
-  }, 15000));
+    }, 300);
+  }, 3600));
 }
 
 /* ─── PHASE 4: Completion & Reconciliation ─── */
@@ -2220,7 +2387,7 @@ function executeReconciliation() {
     document.getElementById('start-btn').disabled = false;
     
     generateDailyEmail();
-  }, 2000));
+  }, 300));
 }
 
 function forceStopDueToWindowClose() {
@@ -2257,75 +2424,329 @@ function updateMetricsUI() {
 /* ═══════════════════════════════════════════════════════════════
    REPORT & MODAL INTERACTIVE CONTROLS
    ═══════════════════════════════════════════════════════════════ */
+let synthesisTimeout = null;
+
+function triggerAiSynthesis() {
+  const overlay = document.getElementById('synthesis-overlay');
+  const badge = document.getElementById('synthesis-badge');
+  if (overlay) overlay.style.display = 'flex';
+  if (badge) badge.style.display = 'inline';
+
+  if (synthesisTimeout) clearTimeout(synthesisTimeout);
+  synthesisTimeout = setTimeout(() => {
+    generateDailyEmail();
+    if (overlay) overlay.style.display = 'none';
+    if (badge) badge.style.display = 'none';
+  }, 800); // 800ms synthesis delay for realistic AI generation
+}
+
 function generateDailyEmail() {
-  const dStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const content = `
-    <div style="font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; color: #1e293b; max-width: 550px; margin: 0 auto;">
-      <h2 style="color: #1a56d6; margin-top: 0; font-size: 18px; border-bottom: 2px solid #eff6ff; padding-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-        <span>✦</span> AutoMigrate AI — Daily Migration Summary
-      </h2>
-      <p style="font-size: 13px; line-height: 1.5; color: #475569;">
-        Hello Operations Team,
-      </p>
-      <p style="font-size: 13px; line-height: 1.5; color: #475569;">
-        Here is the daily automated reconciliation report compiled by the <strong>Autonomous Migration Agents</strong> for the session <strong>MIG-20260528-001</strong>. All active workers successfully closed their pipelines and validated checksum structures.
-      </p>
-      
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin: 18px 0;">
-        <h4 style="margin: 0 0 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Execution Parameters</h4>
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Source System:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right;">IBM FileNet P8 Repository</td>
-          </tr>
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Target Endpoint:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right;">Amazon S3 (rp-migration)</td>
-          </tr>
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Tuned Batch Size:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #1a56d6;">150,000 / Batch</td>
-          </tr>
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Tuned Thread Pool:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #1a56d6;">12 Threads / VM</td>
-          </tr>
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Peak Network Speed:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #16a34a;">4,380 docs/sec</td>
-          </tr>
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Total Migrated:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #16a34a;">350,000 / 350,000 docs (100%)</td>
-          </tr>
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Errors Encounted:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #dc2626;">1 Low Storage Warning</td>
-          </tr>
-          <tr>
-            <td style="padding: 5px 0; color: #64748b;">Self-Healed Resolves:</td>
-            <td style="padding: 5px 0; font-weight: bold; text-align: right; color: #7c3aed;">1 Purge cache (Wipe complete)</td>
-          </tr>
+  const to = document.getElementById('email-to') ? document.getElementById('email-to').value : 'client-ops@rapidpro.com';
+  const cc = document.getElementById('email-cc') ? document.getElementById('email-cc').value : 'stakeholders@rapidpro.com';
+  const subject = document.getElementById('email-subject') ? document.getElementById('email-subject').value : 'RapidPro Daily Migration Status - Session MIG-20260528-001';
+  const tone = document.getElementById('email-tone') ? document.getElementById('email-tone').value : 'executive';
+  const notes = document.getElementById('email-notes') ? document.getElementById('email-notes').value : '';
+  
+  const attachChecksum = document.getElementById('attach-checksum') ? document.getElementById('attach-checksum').checked : true;
+  const attachTuning = document.getElementById('attach-tuning') ? document.getElementById('attach-tuning').checked : true;
+  const attachTelemetry = document.getElementById('attach-telemetry') ? document.getElementById('attach-telemetry').checked : false;
+
+  let headerColor = '#1a56d6';
+  let badgeColor = '#dbeafe';
+  let badgeText = '👔 EXECUTIVE SUMMARY REPORT';
+  if (tone === 'technical') {
+    headerColor = '#7c3aed';
+    badgeColor = '#f5f3ff';
+    badgeText = '💻 TECHNICAL METADATA REPORT';
+  } else if (tone === 'incident') {
+    headerColor = '#dc2626';
+    badgeColor = '#fee2e2';
+    badgeText = '🔧 INCIDENT & SELF-HEALING SUMMARY';
+  }
+
+  let bodyHtml = '';
+  
+  // Custom Notes HTML Block
+  let notesHtml = '';
+  if (notes.trim() !== '') {
+    notesHtml = `
+      <div style="background: #f8fafc; border-left: 4px solid ${headerColor}; padding: 12px; margin: 15px 0; border-radius: 4px; font-style: italic; font-size: 12px; color: #475569;">
+        <strong>Custom Operations Remarks:</strong> "${notes}"
+      </div>
+    `;
+  }
+
+  // Exhibit Checksum
+  let checksumExhibit = '';
+  if (attachChecksum) {
+    checksumExhibit = `
+      <div style="margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; font-size: 11px;">
+        <div style="background: #f8fafc; padding: 8px 12px; font-weight: bold; border-bottom: 1px solid #e2e8f0; color: #475569;">Exhibit A: SHA-256 Count Validation</div>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+          <thead>
+            <tr style="background: #f1f5f9; font-weight: 700; color: #64748b;">
+              <th style="padding: 6px 12px;">Class</th>
+              <th style="padding: 6px 12px;">Source</th>
+              <th style="padding: 6px 12px;">Target</th>
+              <th style="padding: 6px 12px;">Delta</th>
+              <th style="padding: 6px 12px;">Hash Match</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding: 6px 12px; font-weight: bold;">LoanDocuments</td>
+              <td style="padding: 6px 12px;">125,000</td>
+              <td style="padding: 6px 12px;">125,000</td>
+              <td style="padding: 6px 12px; color:#16a34a; font-weight:bold;">0</td>
+              <td style="padding: 6px 12px; color:#0d9488;">✓ PASS</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding: 6px 12px; font-weight: bold;">InvoiceRecords</td>
+              <td style="padding: 6px 12px;">89,400</td>
+              <td style="padding: 6px 12px;">89,400</td>
+              <td style="padding: 6px 12px; color:#16a34a; font-weight:bold;">0</td>
+              <td style="padding: 6px 12px; color:#0d9488;">✓ PASS</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding: 6px 12px; font-weight: bold;">Contracts</td>
+              <td style="padding: 6px 12px;">67,200</td>
+              <td style="padding: 6px 12px;">67,200</td>
+              <td style="padding: 6px 12px; color:#16a34a; font-weight:bold;">0</td>
+              <td style="padding: 6px 12px; color:#0d9488;">✓ PASS</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding: 6px 12px; font-weight: bold;">PolicyDocuments</td>
+              <td style="padding: 6px 12px;">45,800</td>
+              <td style="padding: 6px 12px;">45,800</td>
+              <td style="padding: 6px 12px; color:#16a34a; font-weight:bold;">0</td>
+              <td style="padding: 6px 12px; color:#0d9488;">✓ PASS</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding: 6px 12px; font-weight: bold;">AuditLogs</td>
+              <td style="padding: 6px 12px;">22,600</td>
+              <td style="padding: 6px 12px;">22,600</td>
+              <td style="padding: 6px 12px; color:#16a34a; font-weight:bold;">0</td>
+              <td style="padding: 6px 12px; color:#0d9488;">✓ PASS</td>
+            </tr>
+          </tbody>
         </table>
       </div>
+    `;
+  }
 
-      <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 12px; margin-bottom: 18px;">
-        <span style="font-weight: 700; color: #065f46; font-size: 12.5px;">✓ Storage Self-Healing Verification</span>
-        <p style="margin: 4px 0 0; font-size: 11.5px; color: #065f46; line-height: 1.4;">
-          Storage Monitor Agent successfully captured disk capacity limit on VM-3 (<10GB free). Extractor automatically paused, Ingester concluded upload, and <code>Migration_Complete</code> cache folder was purged, freeing 52 GB without operational interruption.
+  // Exhibit Tuning
+  let tuningExhibit = '';
+  if (attachTuning) {
+    tuningExhibit = `
+      <div style="margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; font-size: 11px;">
+        <div style="background: #f8fafc; padding: 8px 12px; font-weight: bold; border-bottom: 1px solid #e2e8f0; color: #475569;">Exhibit B: Performance Tuning Curve Summary</div>
+        <div style="padding: 10px 12px; line-height: 1.45; color: #475569;">
+          AutoMigrate AI Performance Tuner completed 6 trial steps to lock the optimal parameters for the cloud network interfaces:
+          <ul style="margin: 6px 0 0; padding-left: 20px; font-family: monospace; font-size: 10.5px;">
+            <li>Step 1 (B50k/T4): 1,820/s</li>
+            <li>Step 2 (B75k/T6): 2,640/s</li>
+            <li>Step 3 (B100k/T8): 3,450/s</li>
+            <li>Step 4 (B125k/T10): 4,100/s</li>
+            <li>Step 5 (B150k/T12): <strong>4,380/s (Locked Optimal)</strong></li>
+            <li>Step 6 (B175k/T14): 4,410/s (Marginal gain 0.6% - Rollback initiated)</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  // Exhibit Telemetry
+  let telemetryExhibit = '';
+  if (attachTelemetry) {
+    telemetryExhibit = `
+      <div style="margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; font-size: 11px;">
+        <div style="background: #f8fafc; padding: 8px 12px; font-weight: bold; border-bottom: 1px solid #e2e8f0; color: #475569;">Exhibit C: Raw VM Telemetry Logs</div>
+        <div style="padding: 8px 12px; background: #0f172a; color: #38bdf8; font-family: monospace; font-size: 9.5px; overflow-x: auto; white-space: pre; line-height: 1.35;">[VM-1] 10.240.0.11 - CPU: 72% | Ingestion: 1,095/s | Disk Free: 55.0 GB
+[VM-2] 10.240.0.12 - CPU: 70% | Ingestion: 1,095/s | Disk Free: 62.0 GB
+[VM-3] 10.240.0.13 - CPU: 72% | Ingestion: 1,095/s | Disk Free: 52.0 GB [Storage Purged]
+[VM-4] 10.240.0.14 - CPU: 74% | Ingestion: 1,095/s | Disk Free: 58.0 GB</div>
+      </div>
+    `;
+  }
+
+  if (tone === 'executive') {
+    bodyHtml = `
+      <div style="font-family: 'Inter', Arial, sans-serif; background: #ffffff; color: #1e293b; max-width: 530px; margin: 0 auto; line-height:1.5;">
+        <div style="display: inline-block; background: ${badgeColor}; color: ${headerColor}; font-size: 9.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; margin-bottom: 10px;">${badgeText}</div>
+        <h2 style="color: ${headerColor}; margin: 0 0 14px 0; font-size: 18px; border-bottom: 2px solid #eff6ff; padding-bottom: 10px; font-weight: 800;">
+          AutoMigrate AI — Daily Migration Summary
+        </h2>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 12px;">
+          <strong>To:</strong> ${to}<br/>
+          <strong>CC:</strong> ${cc}<br/>
+          <strong>Subject:</strong> ${subject}
+        </div>
+        <p style="font-size: 12px; line-height: 1.5; color: #334155; margin-bottom: 12px;">
+          Dear Client Operations Team,
+        </p>
+        <p style="font-size: 12px; line-height: 1.5; color: #334155; margin-bottom: 12px;">
+          We are pleased to report the successful completion of the daily automated migration window. The <strong>Orchestration Supervisor Agent</strong> coordinated 4 distributed worker VM threads to pull, validate, and write document entities from your local IBM FileNet P8 repository to Amazon S3 storage buffers.
+        </p>
+        
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin: 15px 0;">
+          <h4 style="margin: 0 0 8px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 800;">Key SLA Accomplishments</h4>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+            <tr>
+              <td style="padding: 4px 0; color: #64748b;">Daily Migrated Count:</td>
+              <td style="padding: 4px 0; font-weight: bold; text-align: right; color: ${headerColor};">350,000 documents</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #64748b;">Cumulative Progress:</td>
+              <td style="padding: 4px 0; font-weight: bold; text-align: right; color: ${headerColor};">100% of Target Phase 1</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #64748b;">Data Integrity Check:</td>
+              <td style="padding: 4px 0; font-weight: bold; text-align: right; color: #16a34a;">100% SHA-256 Verified Matches</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #64748b;">Throughput Rate:</td>
+              <td style="padding: 4px 0; font-weight: bold; text-align: right; color: #16a34a;">4,380 docs/sec (Optimal Locked)</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #64748b;">VM Availability:</td>
+              <td style="padding: 4px 0; font-weight: bold; text-align: right; color: #16a34a;">100% (4 VMs active, 0 server downtime)</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="background: #ecfdf4; border: 1px solid #a7f3d0; border-radius: 6px; padding: 10px; font-size: 11.5px; color: #065f46; margin-bottom: 12px; line-height: 1.4;">
+          <strong>🛡️ Proactive Auto-Healing Event:</strong> During extraction at 40% progress, <strong>VM-3</strong> disk cache hit critical bounds. The Storage Watchdog Agent paused the node, flushed active queues, and safely purged temporary staging directories, recovering 52 GB of disk partition space. Operation resumed automatically with zero file losses.
+        </div>
+
+        ${notesHtml}
+        ${checksumExhibit}
+        ${tuningExhibit}
+        ${telemetryExhibit}
+
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 20px 0 0; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+          Synthesized and dispatched by AutoMigrate AI Agentic Suite.
         </p>
       </div>
+    `;
+  } else if (tone === 'technical') {
+    bodyHtml = `
+      <div style="font-family: 'JetBrains Mono', Consolas, monospace; background: #ffffff; color: #0f172a; max-width: 530px; margin: 0 auto; line-height:1.45; font-size: 11px;">
+        <div style="display: inline-block; background: ${badgeColor}; color: ${headerColor}; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 3px; margin-bottom: 8px;">${badgeText}</div>
+        <h3 style="color: ${headerColor}; margin: 0 0 10px 0; font-size: 14px; border-bottom: 2px dashed #cbd5e1; padding-bottom: 6px;">
+          AUTOMIGRATE AI OPERATIONAL TELEMETRY LOG
+        </h3>
+        <div style="font-size: 10.5px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
+          <strong>RECEIVER:</strong> ${to}<br/>
+          <strong>CARBON_COPY:</strong> ${cc}<br/>
+          <strong>SUBJECT_ID:</strong> ${subject}
+        </div>
+        <p style="margin-bottom: 10px; line-height: 1.4;">
+          SYSTEM HEALTH STATUS: [ONLINE]<br/>
+          METRIC TIMESTAMP: 2026-05-28 19:15:00 GMT+5:30
+        </p>
+        <p style="margin-bottom: 10px; line-height: 1.4;">
+          The multi-agent orchestration grid successfully completed session <strong>MIG-20260528-001</strong>. Tuning parameters compiled by the Performance Tuner Agent are locked at optimal boundaries. Output stats details below:
+        </p>
+        
+        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 10px; margin: 12px 0; line-height:1.5;">
+          <strong style="color: ${headerColor}; font-size: 10.5px;">[RUN SYSTEM PARAMETERS]</strong><br/>
+          - Orchestration Mode: Distributed Worker VM Provisioning<br/>
+          - Node workers: 4 Provisioned worker nodes<br/>
+          - Network bounds: Peak 4,410 docs/s | Average 4,120 docs/s<br/>
+          - Buffer configuration: tunedBatch=150,000 | JVMThreads=12<br/>
+          - CPU Load peak: 88% on VM-3 (during flush write limits)<br/>
+          - SHA-256 check results: 350,000 matches | 0 delta | DeltaPct=0.0%
+        </div>
 
-      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 15px 0 0; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-        Sent automatically by AutoMigrate AI Agent Framework at ${now()}
-      </p>
-    </div>
-  `;
-  
-  document.getElementById('email-body-content').innerHTML = content;
+        <div style="background: #faf5ff; border-left: 3px solid #7c3aed; padding: 8px 10px; font-size: 11px; color: #581c87; margin-bottom: 12px;">
+          <strong>SYSTEM FAULT AND RESOLUTION:</strong> VM-3 storage exceeded maximum safe bound threshold (<10GB partition limits) at 40% run status. Action timeline: paused VM-3 thread ➔ directed load flusher to dump active queue (75,000 chunks) to S3 ➔ purger wiped local cache directory \`/var/tmp/Migration_Complete/\` ➔ freed 52 GB partition sector ➔ status returned HEALTHY ➔ auto-resumed. Total recovery duration: 24.0 seconds.
+        </div>
+
+        ${notesHtml}
+        ${checksumExhibit}
+        ${tuningExhibit}
+        ${telemetryExhibit}
+
+        <p style="font-size: 10px; color: #94a3b8; text-align: center; margin: 15px 0 0; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+          Generated automatically by AutoMigrate AI Validation API.
+        </p>
+      </div>
+    `;
+  } else if (tone === 'incident') {
+    bodyHtml = `
+      <div style="font-family: 'Inter', Arial, sans-serif; background: #ffffff; color: #1e293b; max-width: 530px; margin: 0 auto; line-height: 1.5; font-size: 12px;">
+        <div style="display: inline-block; background: ${badgeColor}; color: ${headerColor}; font-size: 9.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; margin-bottom: 10px;">${badgeText}</div>
+        <h2 style="color: ${headerColor}; margin: 0 0 14px 0; font-size: 18px; border-bottom: 2px solid #fee2e2; padding-bottom: 10px; font-weight: 800;">
+          AutoMigrate AI — Incident Remediation Report
+        </h2>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 12px;">
+          <strong>Recipient:</strong> ${to}<br/>
+          <strong>CC:</strong> ${cc}<br/>
+          <strong>Subject:</strong> ${subject}
+        </div>
+        <p style="color: #334155; margin-bottom: 12px; font-size: 12px;">
+          Dear Client Operations &amp; Support Team,
+        </p>
+        <p style="color: #334155; margin-bottom: 12px; font-size: 12px;">
+          This incident report has been generated to document the automated storage threshold deadlock detected and successfully resolved on <strong>VM-3</strong> during the migration execution window. The agent-based autonomous protection mechanism successfully maintained system stability and zero file loss.
+        </p>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 12px; margin: 15px 0;">
+          <h4 style="margin: 0 0 6px; font-size: 10.5px; text-transform: uppercase; color: #b45309; font-weight: 800;">Incident Description</h4>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+            <tr>
+              <td style="padding: 3px 0; color: #64748b;">Incident Type:</td>
+              <td style="padding: 3px 0; font-weight: bold; text-align: right; color: #dc2626;">Low Staging Storage Capacity Warning</td>
+            </tr>
+            <tr>
+              <td style="padding: 3px 0; color: #64748b;">Trigger Point:</td>
+              <td style="padding: 3px 0; font-weight: bold; text-align: right;">40% Progress Tick (Session MIG-20260528-001)</td>
+            </tr>
+            <tr>
+              <td style="padding: 3px 0; color: #64748b;">Node Affected:</td>
+              <td style="padding: 3px 0; font-weight: bold; text-align: right; color: #dc2626;">VM-3 (worker-prod-03) IP 10.240.0.13</td>
+            </tr>
+            <tr>
+              <td style="padding: 3px 0; color: #64748b;">Capacity Reached:</td>
+              <td style="padding: 3px 0; font-weight: bold; text-align: right;">92.0 GB used (8.0 GB remaining, threshold &lt;10GB)</td>
+            </tr>
+            <tr>
+              <td style="padding: 3px 0; color: #64748b;">Incident Level:</td>
+              <td style="padding: 3px 0; font-weight: bold; text-align: right; color: #b45309; text-transform:uppercase;">Medium (Auto-Healed)</td>
+            </tr>
+          </table>
+        </div>
+
+        <h4 style="margin: 14px 0 6px; font-size: 11.5px; color: #1e293b; font-weight: 800;">🛠️ Agentic Protection Step-by-Step Resolution</h4>
+        <ol style="margin: 0 0 15px 0; padding-left: 20px; font-size: 12px; color: #475569; line-height: 1.55;">
+          <li><strong>Detection:</strong> Storage Monitor Agent identified that the temporary local staging buffer \`/var/tmp/Migration_Complete/\` had reached 17.5 GB, leaving only 8.0 GB free disk space.</li>
+          <li><strong>Halt Command:</strong> Supervisor Agent immediately halted JVM extraction scripts on VM-3 to prevent storage overflow. VMs 1, 2, and 4 continued unaffected.</li>
+          <li><strong>Flush Active Buffer:</strong> Ingester Agent was directed to complete active queue uploads (75,000 files, 17.5 GB) from local disk to the target AWS S3 bucket.</li>
+          <li><strong>Cache Purging:</strong> Error Resolver Agent verified successful S3 write validation, then called directory purge command, completely wiping the temporary folder and restoring VM-3 back to healthy levels (52 GB freed).</li>
+          <li><strong>Resumption:</strong> Supervisor verified that VM-3 free space was above the safe range, automatically resuming extraction tasks. Total execution stall time was only 24 seconds.</li>
+        </ol>
+
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 10px; font-size: 11.5px; color: #065f46; margin-bottom: 12px; line-height: 1.4;">
+          <strong>Data Integrity Lock:</strong> Post-incident reconciliation proved that all 350,000 files successfully matched targets with zero mismatches, verifying that the pause-resume loop maintained perfect transactional integrity.
+        </div>
+
+        ${notesHtml}
+        ${checksumExhibit}
+        ${tuningExhibit}
+        ${telemetryExhibit}
+
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 20px 0 0; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+          Incident compiled by AutoMigrate Self-Healing Watchdog API.
+        </p>
+      </div>
+    `;
+  }
+
+  document.getElementById('email-body-content').innerHTML = bodyHtml;
 }
 
 function openEmailReport() {
+  generateDailyEmail();
   document.getElementById('report-modal').classList.add('open');
 }
 
@@ -2348,23 +2769,30 @@ function copyEmailHTML() {
 }
 
 function openInMailClient() {
-  const dStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const subject = encodeURIComponent(`RapidPro Daily Migration Status - ${dStr}`);
+  const to = document.getElementById('email-to') ? document.getElementById('email-to').value : 'client-ops@rapidpro.com';
+  const cc = document.getElementById('email-cc') ? document.getElementById('email-cc').value : 'stakeholders@rapidpro.com';
+  const subject = document.getElementById('email-subject') ? document.getElementById('email-subject').value : 'RapidPro Daily Migration Status - Session MIG-20260528-001';
+  const notes = document.getElementById('email-notes') ? document.getElementById('email-notes').value : '';
+  const tone = document.getElementById('email-tone') ? document.getElementById('email-tone').value : 'executive';
+
   const bodyText = encodeURIComponent(
     `Dear Client Operations Team,\n\n` +
     `This is an automated status report generated by the Rapidpro Agentic AI Orchestrator.\n\n` +
     `MIGRATION SUMMARY:\n` +
+    `- Session ID: MIG-20260528-001\n` +
     `- Source System: IBM FileNet P8 Repository\n` +
     `- Target Endpoint: Amazon S3 (rp-migration)\n` +
+    `- Tuned Configuration: Batch 150k | Threads 12 per VM\n` +
     `- Peak Speed: 4,380 docs/sec\n` +
     `- Status: 100% Complete (350,000 / 350,000 docs)\n` +
     `- Errors: 0 outstanding (1 low-storage warning resolved)\n` +
     `- Data Integrity: 100% Verified (SHA-256 matches)\n\n` +
+    (notes ? `Remarks:\n"${notes}"\n\n` : '') +
     `The worker VM assets have been successfully scaled down to optimize network and compute budgets.\n\n` +
     `Best Regards,\n` +
     `Rapidpro AI Operations Agent`
   );
-  window.location.href = `mailto:client-ops@rapidpro.com?subject=${subject}&body=${bodyText}`;
+  window.location.href = `mailto:${to}?cc=${cc}&subject=${encodeURIComponent(subject)}&body=${bodyText}`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
